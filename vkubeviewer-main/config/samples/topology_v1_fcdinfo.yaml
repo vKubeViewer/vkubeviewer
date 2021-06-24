@@ -1,7 +1,0 @@
-apiVersion: topology.vkubeviewer.com/v1
-kind: FCDInfo
-metadata:
-  name: fcdinfo-sample
-spec:
-  # Add fields here
-  pvId: pvc-e3f6dd59-cbc0-49a7-97c8-d92a26732c43
