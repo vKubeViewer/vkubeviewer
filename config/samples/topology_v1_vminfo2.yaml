@@ -1,0 +1,7 @@
+apiVersion: topology.vkubeviewer.com/v1
+kind: VMInfo
+metadata:
+  name: k8s-worker-3
+spec:
+  # Add fields here
+  nodename: k8s-worker-03
