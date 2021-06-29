@@ -4,4 +4,4 @@ metadata:
   name: nodenetinfo-sample
 spec:
   # Add fields here
-  foo: bar
+  nodename: k8s-worker-02
