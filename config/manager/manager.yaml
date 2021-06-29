@@ -52,5 +52,25 @@ spec:
           requests:
             cpu: 100m
             memory: 20Mi
+        env:
+          - name: GOVMOMI_USERNAME
+            valueFrom:
+              secretKeyRef:
+                name: vc-creds
+                key: GOVMOMI_USERNAME
+          - name: GOVMOMI_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: vc-creds
+                key: GOVMOMI_PASSWORD
+          - name: GOVMOMI_URL
+            valueFrom:
+              secretKeyRef:
+                name: vc-creds
+                key: GOVMOMI_URL
+      volumes:
+        - name: vc-creds
+          secret:
+            secretName: vc-creds
       serviceAccountName: controller-manager
       terminationGracePeriodSeconds: 10
