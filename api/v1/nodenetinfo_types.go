@@ -25,21 +25,23 @@ import (
 
 // NodeNetInfoSpec defines the desired state of NodeNetInfo
 type NodeNetInfoSpec struct {
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
-
-	// Foo is an example field of NodeNetInfo. Edit nodenetinfo_types.go to remove/update
-	Foo string `json:"foo,omitempty"`
+	Nodename string `json:"nodename"`
 }
 
 // NodeNetInfoStatus defines the observed state of NodeNetInfo
 type NodeNetInfoStatus struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
+	NetName          string `json:"net_name,omitempty"`
+	NetRef           string `json:"net_ref,omitempty"`
+	NetOverallStatus string `json:"net_overall_status,omitempty"`
+	VlanId           int64  `json:"vlan_id,omitempty"`
+	SwitchType       string `json:"switch_type,omitempty"`
 }
 
-//+kubebuilder:object:root=true
-//+kubebuilder:subresource:status
+// +kubebuilder:validation:Optional
+// +kubebuilder:resource:shortName={"net"}
+// +kubebuilder:printcolumn:name="Nodename",type=string,JSONPath=`.spec.nodename`
+// +kubebuilder:object:root=true
+// +kubebuilder:subresource:status
 
 // NodeNetInfo is the Schema for the nodenetinfoes API
 type NodeNetInfo struct {
