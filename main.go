@@ -215,6 +215,14 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "HostInfo")
 		os.Exit(1)
 	}
+	if err = (&controllers.NodeNetInfoReconciler{
+		Client: mgr.GetClient(),
+		Log:    ctrl.Log.WithName("controllers").WithName("NodeNetInfo"),
+		Scheme: mgr.GetScheme(),
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "NodeNetInfo")
+		os.Exit(1)
+	}
 	// +kubebuilder:scaffold:builder
 
 	setupLog.Info("starting manager")

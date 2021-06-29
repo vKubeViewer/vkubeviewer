@@ -1,0 +1,7 @@
+apiVersion: topology.vkubeviewer.com/v1
+kind: NodeNetInfo
+metadata:
+  name: nodenetinfo-sample
+spec:
+  # Add fields here
+  foo: bar
