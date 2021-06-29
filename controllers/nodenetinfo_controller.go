@@ -18,8 +18,14 @@ package controllers
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/go-logr/logr"
+	"github.com/vmware/govmomi/property"
+	"github.com/vmware/govmomi/view"
+	"github.com/vmware/govmomi/vim25"
+	"github.com/vmware/govmomi/vim25/mo"
+	k8serr "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -30,6 +36,7 @@ import (
 // NodeNetInfoReconciler reconciles a NodeNetInfo object
 type NodeNetInfoReconciler struct {
 	client.Client
+	VC     *vim25.Client
 	Log    logr.Logger
 	Scheme *runtime.Scheme
 }
@@ -48,11 +55,73 @@ type NodeNetInfoReconciler struct {
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.7.2/pkg/reconcile
 func (r *NodeNetInfoReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	_ = r.Log.WithValues("nodenetinfo", req.NamespacedName)
+	ctx = context.Background()
 
-	// your logic here
+	// Log Session
+	log := r.Log.WithValues("NodeNetInfo", req.NamespacedName)
+	net := &topologyv1.NodeNetInfo{}
+
+	// Log Output for failure
+	if err := r.Client.Get(ctx, req.NamespacedName, net); err != nil {
+		if !k8serr.IsNotFound(err) {
+			log.Error(err, "unable to fecth NodeNetInfo")
+		}
+		return ctrl.Result{}, client.IgnoreNotFound(err)
+	}
+
+	// Log Output for sucess
+	msg := fmt.Sprintf("received reconcile request for %q (namespace : %q)", net.GetName(), net.GetNamespace())
+	log.Info(msg)
+
+	// Create a view manager
+
+	m := view.NewManager(r.VC)
+
+	// Create a container view of VirtualMachine objects
+
+	vvm, err := m.CreateContainerView(ctx, r.VC.ServiceContent.RootFolder, []string{"VirtualMachine"}, true)
+
+	if err != nil {
+		msg := fmt.Sprintf("unable to create container view for VirtualMachines: error %s", err)
+		log.Info(msg)
+		return ctrl.Result{}, err
+	}
+
+	defer vvm.Destroy(ctx)
+
+	// Retrieve network MOR for all VMs
+
+	var vms []mo.VirtualMachine
+
+	err = vvm.Retrieve(ctx, []string{"VirtualMachine"}, nil, &vms)
+	if err != nil {
+		msg := fmt.Sprintf("unable to retrieve VM info: error %s", err)
+		log.Info(msg)
+		return ctrl.Result{}, err
+	}
+
+	for _, vm := range vms {
+		if vm.Summary.Config.Name == net.Spec.Nodename {
+			pc := property.DefaultCollector(r.VC)
+			var n mo.Network
+			err = pc.Retrieve(ctx, vm.Network, nil, &n)
+			if err != nil {
+				msg = fmt.Sprintf("unable to retrieve VM Network: error %s", err)
+				log.Info(msg)
+				return ctrl.Result{}, err
+			}
+
+			net.Status.NetName = n.Name
+		}
+	}
+
+	if err := r.Status().Update(ctx, net); err != nil {
+		log.Error(err, "unable to update VMInfo status")
+		return ctrl.Result{}, err
+	}
 
 	return ctrl.Result{}, nil
+
 }
 
 // SetupWithManager sets up the controller with the Manager.

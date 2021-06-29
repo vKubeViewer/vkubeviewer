@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/vmware/govmomi/examples"
+	"github.com/vmware/govmomi/property"
 	"github.com/vmware/govmomi/view"
 	"github.com/vmware/govmomi/vim25"
 	"github.com/vmware/govmomi/vim25/mo"
@@ -25,6 +26,7 @@ func main() {
 		// Retrieve summary property for all machines
 		// Reference: http://pubs.vmware.com/vsphere-60/topic/com.vmware.wssdk.apiref.doc/vim.VirtualMachine.html
 		var vms []mo.VirtualMachine
+
 		err = vvm.Retrieve(ctx, []string{"VirtualMachine"}, nil, &vms)
 		if err != nil {
 			return err
@@ -34,13 +36,19 @@ func main() {
 
 		for _, vm := range vms {
 			if vm.Summary.Config.Name == "k8s-worker-02" {
-				fmt.Printf("%s\n", vm.Summary.Config.Name)
-				fmt.Printf("%T\n", vm.Network)
 				fmt.Println(len(vm.Network))
-				for n := range vm.Network {
-					fmt.Printf("%T\n", n)
-					fmt.Println(n)
+
+				pc := property.DefaultCollector(c)
+				var n mo.Network
+
+				err = pc.Retrieve(ctx, vm.Network, nil, &n)
+				if err != nil {
+					return err
 				}
+
+				fmt.Printf("%T\n", n)
+				fmt.Println(n.Name)
+
 			}
 		}
 

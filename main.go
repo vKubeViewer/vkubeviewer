@@ -217,6 +217,7 @@ func main() {
 	}
 	if err = (&controllers.NodeNetInfoReconciler{
 		Client: mgr.GetClient(),
+		VC:     c1,
 		Log:    ctrl.Log.WithName("controllers").WithName("NodeNetInfo"),
 		Scheme: mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
