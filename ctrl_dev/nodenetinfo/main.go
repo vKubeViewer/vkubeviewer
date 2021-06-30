@@ -46,7 +46,7 @@ func main() {
 					var Switchtype string
 					var Overallstatus string
 					var Netname string
-					var Vlanid int64
+					//var Vlanid int64
 
 					if v.Type == "Network" {
 						var n mo.Network
@@ -80,14 +80,14 @@ func main() {
 							return err
 						}
 						fmt.Printf("%s", dvs.Uuid)
-						test := dvs.Config.GetDVSConfigInfo()
-						fmt.Printf("%s, %T\n", test, test)
+						//test := dvs.Config.GetDVSConfigInfo()
+						//fmt.Printf("%s, %T\n", test, test)
 						//test = test.DefaultPortConfig.GetDVPortSetting()
 						//fmt.Printf("%s, %T\n", test, test)
 
 					}
 
-					fmt.Printf("%s %s %s\n", Switchtype, Overallstatus, Netname, Vlanid)
+					fmt.Printf("%s %s %s\n", Switchtype, Overallstatus, Netname)
 				}
 
 			}
