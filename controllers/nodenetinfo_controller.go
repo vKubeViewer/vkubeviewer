@@ -111,7 +111,8 @@ func (r *NodeNetInfoReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 				return ctrl.Result{}, err
 			}
 
-			net.Status.NetName = n.Name
+			net.Status.NetName = string(n.Name)
+			net.Status.NetOverallStatus = string(n.OverallStatus)
 		}
 	}
 

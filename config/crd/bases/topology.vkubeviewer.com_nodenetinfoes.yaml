@@ -51,8 +51,8 @@ spec:
               net_name:
                 type: string
               net_overall_status:
-                type: string
-              net_ref:
+                description: NetRef           string `json:"net_ref,omitempty"` this
+                  ref can't show as string, just leave it
                 type: string
               switch_type:
                 type: string

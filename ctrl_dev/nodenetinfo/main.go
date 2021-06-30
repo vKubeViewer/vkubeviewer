@@ -49,6 +49,10 @@ func main() {
 				fmt.Printf("%T\n", n)
 				fmt.Println(n.Name)
 
+				overallstatus := n.OverallStatus
+
+				fmt.Printf("%s", overallstatus)
+
 			}
 		}
 
