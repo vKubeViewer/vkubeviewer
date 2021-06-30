@@ -19,6 +19,10 @@ The key problem for this project is that Kubernetes has no visibility on the und
 - Developed knowledge in GO and govmomi for calling vSphere API
 - Create a set of sample govmomi scripts which can be used to retrieve vSphere information
 
+## Quick-Start Guides
+
+Quick-Start guides are currently in production and will be uploaded in due course.
+
 
 ## Current Feature Set
 
