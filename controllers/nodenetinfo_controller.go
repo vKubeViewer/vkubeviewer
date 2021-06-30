@@ -102,17 +102,37 @@ func (r *NodeNetInfoReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 
 	for _, vm := range vms {
 		if vm.Summary.Config.Name == net.Spec.Nodename {
-			pc := property.DefaultCollector(r.VC)
-			var n mo.Network
-			err = pc.Retrieve(ctx, vm.Network, nil, &n)
-			if err != nil {
-				msg = fmt.Sprintf("unable to retrieve VM Network: error %s", err)
-				log.Info(msg)
-				return ctrl.Result{}, err
+
+			for _, ref := range vm.Network {
+				if ref.Type == "Network" {
+					var n mo.Network
+					net.Status.SwitchType = "Standard"
+
+					pc := property.DefaultCollector(r.VC)
+					err = pc.Retrieve(ctx, vm.Network, nil, &n)
+					if err != nil {
+						msg = fmt.Sprintf("unable to retrieve VM Network: error %s", err)
+						log.Info(msg)
+						return ctrl.Result{}, err
+					}
+					net.Status.NetName = string(n.Name)
+					net.Status.NetOverallStatus = string(n.OverallStatus)
+				} else if ref.Type == "DistributedVirtualPortgroup" {
+					var n mo.DistributedVirtualPortgroup
+					net.Status.SwitchType = "Distributed"
+					pc := property.DefaultCollector(r.VC)
+					err = pc.Retrieve(ctx, vm.Network, nil, &n)
+					if err != nil {
+						msg = fmt.Sprintf("unable to retrieve VM DVPortGroup: error %s", err)
+						log.Info(msg)
+						return ctrl.Result{}, err
+					}
+					net.Status.NetName = string(n.Name)
+					net.Status.NetOverallStatus = string(n.OverallStatus)
+
+				}
 			}
 
-			net.Status.NetName = string(n.Name)
-			net.Status.NetOverallStatus = string(n.OverallStatus)
 		}
 	}
 

@@ -137,10 +137,11 @@ func (r *FCDInfoReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 					backing := idinfo.Config.BaseConfigInfo.Backing.(*types.BaseConfigInfoDiskFileBackingInfo)
 					fcd.Status.FilePath = string(backing.FilePath)
 					fcd.Status.ProvisioningType = string(backing.ProvisioningType)
-				} else {
-					msg := fmt.Sprintf("FCDInfo: %v does not match %v", idinfo.Config.BaseConfigInfo.Name, fcd.Spec.PVId)
-					log.Info(msg)
 				}
+				// else {
+				// 	msg := fmt.Sprintf("FCDInfo: %v does not match %v", idinfo.Config.BaseConfigInfo.Name, fcd.Spec.PVId)
+				// 	log.Info(msg)
+				// }
 			}
 		}
 
