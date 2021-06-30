@@ -35,23 +35,46 @@ func main() {
 		// Print summary per vm (see also: govc/vm/info.go)
 
 		for _, vm := range vms {
-			if vm.Summary.Config.Name == "k8s-worker-02" {
-				fmt.Println(len(vm.Network))
+			if vm.Summary.Config.Name == "ucc-demo" {
+				//if vm.Summary.Config.Name == "k8s-worker-02" {
+				fmt.Printf("%T, %v\n", vm.Network, vm.Network)
 
-				pc := property.DefaultCollector(c)
-				var n mo.Network
+				for _, v := range vm.Network {
+					fmt.Printf("%T, %v\n", v, v)
+					fmt.Println(v.Type)
 
-				err = pc.Retrieve(ctx, vm.Network, nil, &n)
-				if err != nil {
-					return err
+					var Switchtype string
+					var Overallstatus string
+					var Netname string
+
+					if v.Type == "Network" {
+						var n mo.Network
+						Switchtype = "Standard"
+
+						pc := property.DefaultCollector(c)
+						err = pc.Retrieve(ctx, vm.Network, nil, &n)
+						if err != nil {
+							return err
+						}
+						Netname = n.Name
+						Overallstatus = string(n.OverallStatus)
+
+					} else if v.Type == "DistributedVirtualPortgroup" {
+						fmt.Println("get here")
+						var n mo.DistributedVirtualPortgroup
+						Switchtype = "Distributed"
+
+						pc := property.DefaultCollector(c)
+						err = pc.Retrieve(ctx, vm.Network, nil, &n)
+						if err != nil {
+							return err
+						}
+						Netname = n.Name
+						Overallstatus = string(n.OverallStatus)
+					}
+
+					fmt.Printf("%s %s %s\n", Switchtype, Overallstatus, Netname)
 				}
-
-				fmt.Printf("%T\n", n)
-				fmt.Println(n.Name)
-
-				overallstatus := n.OverallStatus
-
-				fmt.Printf("%s", overallstatus)
 
 			}
 		}
