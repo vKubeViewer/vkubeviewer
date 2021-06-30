@@ -2,7 +2,7 @@
 
 ## About the vKubeViewer project
 
-The vKubeViewer project is a collaborative project between VMware and University College Cork with the aim to create a Kubernetes operator that will facilitate the retrival of vSphere resource usage infomation from within Kubernetes. 
+The vKubeViewer project is a collaborative project from students of University College Cork with the aim to create a Kubernetes operator that will facilitate the retrival of vSphere resource usage infomation from within Kubernetes. 
 
 Upon initial 1.0 release, the project will be open sourced and the Kubernetes community is free to use and update the project with additional features and functionality. 
 
@@ -18,7 +18,6 @@ The key problem for this project is that Kubernetes has no visibility on the und
 
 - Developed knowledge in GO and govmomi for calling vSphere API
 - Create a set of sample govmomi scripts which can be used to retrieve vSphere information
-
 
 
 ## Current Feature Set

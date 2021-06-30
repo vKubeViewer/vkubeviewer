@@ -61,6 +61,32 @@ rules:
 - apiGroups:
   - topology.vkubeviewer.com
   resources:
+  - nodenetinfoes
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - topology.vkubeviewer.com
+  resources:
+  - nodenetinfoes/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - topology.vkubeviewer.com
+  resources:
+  - nodenetinfoes/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - topology.vkubeviewer.com
+  resources:
   - vminfoes
   verbs:
   - create

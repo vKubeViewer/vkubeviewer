@@ -178,7 +178,7 @@ func main() {
 		MetricsBindAddress: metricsAddr,
 		Port:               9443,
 		LeaderElection:     enableLeaderElection,
-		LeaderElectionID:   "b610b79e.corinternal.com",
+		LeaderElectionID:   "982940d6.vkubeviewer.com",
 	})
 	if err != nil {
 		setupLog.Error(err, "unable to start manager")
@@ -213,6 +213,15 @@ func main() {
 		Scheme: mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "HostInfo")
+		os.Exit(1)
+	}
+	if err = (&controllers.NodeNetInfoReconciler{
+		Client: mgr.GetClient(),
+		VC:     c1,
+		Log:    ctrl.Log.WithName("controllers").WithName("NodeNetInfo"),
+		Scheme: mgr.GetScheme(),
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "NodeNetInfo")
 		os.Exit(1)
 	}
 	// +kubebuilder:scaffold:builder

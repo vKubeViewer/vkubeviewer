@@ -1,0 +1,7 @@
+apiVersion: topology.vkubeviewer.com/v1
+kind: NodeNetInfo
+metadata:
+  name: nodenetinfo-sample-standard
+spec:
+  # Add fields here
+  nodename: k8s-worker-02
