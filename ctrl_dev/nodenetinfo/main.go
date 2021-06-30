@@ -46,6 +46,7 @@ func main() {
 					var Switchtype string
 					var Overallstatus string
 					var Netname string
+					var Vlanid int64
 
 					if v.Type == "Network" {
 						var n mo.Network
@@ -71,9 +72,22 @@ func main() {
 						}
 						Netname = n.Name
 						Overallstatus = string(n.OverallStatus)
+
+						// get vlanid
+						var dvs mo.DistributedVirtualSwitch
+						err = pc.RetrieveOne(ctx, *n.Config.DistributedVirtualSwitch, nil, &dvs)
+						if err != nil {
+							return err
+						}
+						fmt.Printf("%s", dvs.Uuid)
+						test := dvs.Config.GetDVSConfigInfo()
+						fmt.Printf("%s, %T\n", test, test)
+						//test = test.DefaultPortConfig.GetDVPortSetting()
+						//fmt.Printf("%s, %T\n", test, test)
+
 					}
 
-					fmt.Printf("%s %s %s\n", Switchtype, Overallstatus, Netname)
+					fmt.Printf("%s %s %s\n", Switchtype, Overallstatus, Netname, Vlanid)
 				}
 
 			}
