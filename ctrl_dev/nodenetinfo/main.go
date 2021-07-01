@@ -9,6 +9,7 @@ import (
 	"github.com/vmware/govmomi/view"
 	"github.com/vmware/govmomi/vim25"
 	"github.com/vmware/govmomi/vim25/mo"
+	"github.com/vmware/govmomi/vim25/types"
 )
 
 func main() {
@@ -46,7 +47,7 @@ func main() {
 					var Switchtype string
 					var Overallstatus string
 					var Netname string
-					//var Vlanid int64
+					var Vlanid int32
 
 					if v.Type == "Network" {
 						var n mo.Network
@@ -80,6 +81,12 @@ func main() {
 							return err
 						}
 						fmt.Printf("%s", dvs.Uuid)
+
+						config := dvs.Config.(*types.VMwareDVSConfigInfo)
+						portConfig := config.DefaultPortConfig.(*types.VMwareDVSPortSetting)
+						vlan := portConfig.Vlan.(*types.VmwareDistributedVirtualSwitchVlanIdSpec)
+						fmt.Printf("vlan id=%d\n", vlan.VlanId)
+
 						//test := dvs.Config.GetDVSConfigInfo()
 						//fmt.Printf("%s, %T\n", test, test)
 						//test = test.DefaultPortConfig.GetDVPortSetting()
@@ -87,7 +94,7 @@ func main() {
 
 					}
 
-					fmt.Printf("%s %s %s\n", Switchtype, Overallstatus, Netname)
+					fmt.Printf("%s %s %s %d\n", Switchtype, Overallstatus, Netname, Vlanid)
 				}
 
 			}

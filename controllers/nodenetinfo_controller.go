@@ -56,8 +56,9 @@ type NodeNetInfoReconciler struct {
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.7.2/pkg/reconcile
 func (r *NodeNetInfoReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	ctx = context.Background()
-
+	// ------------
 	// Log Session
+	// ------------
 	log := r.Log.WithValues("NodeNetInfo", req.NamespacedName)
 	net := &topologyv1.NodeNetInfo{}
 
@@ -72,6 +73,10 @@ func (r *NodeNetInfoReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 	// Log Output for sucess
 	msg := fmt.Sprintf("received reconcile request for %q (namespace : %q)", net.GetName(), net.GetNamespace())
 	log.Info(msg)
+
+	// ------------
+	// Retrieve Session
+	// ------------
 
 	// Create a view manager
 
@@ -89,7 +94,7 @@ func (r *NodeNetInfoReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 
 	defer vvm.Destroy(ctx)
 
-	// Retrieve network MOR for all VMs
+	// Retrieve VM information for all VMs
 
 	var vms []mo.VirtualMachine
 
@@ -100,14 +105,18 @@ func (r *NodeNetInfoReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 		return ctrl.Result{}, err
 	}
 
+	// traverse all the VM
 	for _, vm := range vms {
+		// if the VM's name equals to Nodename
 		if vm.Summary.Config.Name == net.Spec.Nodename {
-
+			// traverse the network, in our operator, we consider only single network
 			for _, ref := range vm.Network {
 				if ref.Type == "Network" {
+					// if it's a normal Network, define the n as DistributedVirtualPortgroup mo.Network
 					var n mo.Network
 					net.Status.SwitchType = "Standard"
 
+					// a property collector to retrieve objects by MOR
 					pc := property.DefaultCollector(r.VC)
 					err = pc.Retrieve(ctx, vm.Network, nil, &n)
 					if err != nil {
@@ -115,11 +124,16 @@ func (r *NodeNetInfoReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 						log.Info(msg)
 						return ctrl.Result{}, err
 					}
+
+					// store the info in the status
 					net.Status.NetName = string(n.Name)
 					net.Status.NetOverallStatus = string(n.OverallStatus)
 				} else if ref.Type == "DistributedVirtualPortgroup" {
+					// if it's a distributed network, define the n as mo.DistributedVirtualPortgroup
 					var n mo.DistributedVirtualPortgroup
 					net.Status.SwitchType = "Distributed"
+
+					// a property collector to retrieve objects by MOR
 					pc := property.DefaultCollector(r.VC)
 					err = pc.Retrieve(ctx, vm.Network, nil, &n)
 					if err != nil {
@@ -127,6 +141,8 @@ func (r *NodeNetInfoReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 						log.Info(msg)
 						return ctrl.Result{}, err
 					}
+
+					// store the info in the status
 					net.Status.NetName = string(n.Name)
 					net.Status.NetOverallStatus = string(n.OverallStatus)
 
@@ -136,6 +152,11 @@ func (r *NodeNetInfoReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 		}
 	}
 
+	// ------------
+	// Update Session
+	// ------------
+
+	// update the status
 	if err := r.Status().Update(ctx, net); err != nil {
 		log.Error(err, "unable to update VMInfo status")
 		return ctrl.Result{}, err
