@@ -30,12 +30,12 @@ type DatastoreInfoSpec struct {
 
 // DatastoreInfoStatus defines the observed state of DatastoreInfo
 type DatastoreInfoStatus struct {
-	Type       string   `json:"type,omitempty"`
-	Status     string   `json:"status,omitempty"`
-	Capacity   int64    `json:"capacity,omitempty"`
-	FreeSpace  int64    `json:"free_space,omitempty"`
-	Accessible bool     `json:"accessible,omitempty"`
-	Hosts      []string `json:"hosts,omitempty"`
+	Type         string   `json:"type,omitempty"`
+	Status       string   `json:"status,omitempty"`
+	Capacity     int64    `json:"capacity,omitempty"`
+	FreeSpace    int64    `json:"free_space,omitempty"`
+	Accessible   bool     `json:"accessible,omitempty"`
+	HostsMounted []string `json:"hosts,omitempty"`
 }
 
 // +kubebuilder:validation:Optional

@@ -4,4 +4,4 @@ metadata:
   name: datastoreinfo-sample
 spec:
   # Add fields here
-  foo: bar
+  datastore: vsan-OCTO-Cluster-A 

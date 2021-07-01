@@ -9,6 +9,32 @@ rules:
 - apiGroups:
   - topology.vkubeviewer.com
   resources:
+  - datastoreinfoes
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - topology.vkubeviewer.com
+  resources:
+  - datastoreinfoes/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - topology.vkubeviewer.com
+  resources:
+  - datastoreinfoes/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - topology.vkubeviewer.com
+  resources:
   - fcdinfoes
   verbs:
   - create
