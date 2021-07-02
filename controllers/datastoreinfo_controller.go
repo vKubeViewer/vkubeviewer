@@ -29,7 +29,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-
+	"vkubeviewer/tool"
 	topologyv1 "vkubeviewer/api/v1"
 )
 
@@ -113,8 +113,8 @@ func (r *DatastoreInfoReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 			// Store info into the status
 			dsinfo.Status.Type = ds.Summary.Type
 			dsinfo.Status.Status = string(ds.OverallStatus)
-			dsinfo.Status.Capacity = ds.Summary.Capacity
-			dsinfo.Status.FreeSpace = ds.Summary.FreeSpace
+			dsinfo.Status.Capacity = tool.ByteCountIEC(ds.Summary.Capacity)
+			dsinfo.Status.FreeSpace = tool.ByteCountIEC(ds.Summary.FreeSpace)
 			dsinfo.Status.Accessible = ds.Summary.Accessible
 
 			// get the Hosts attached to this datastore, type []types.DatastoreHostMount

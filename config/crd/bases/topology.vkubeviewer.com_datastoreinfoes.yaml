@@ -51,11 +51,9 @@ spec:
               accessible:
                 type: boolean
               capacity:
-                format: int64
-                type: integer
+                type: string
               free_space:
-                format: int64
-                type: integer
+                type: string
               hosts:
                 items:
                   type: string

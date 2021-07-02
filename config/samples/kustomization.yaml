@@ -5,3 +5,4 @@ resources:
 - topology_v1_vminfo2.yaml
 - topology_v1_nodenetinfo.yaml
 - topology_v1_nodenetinfo2.yaml
+- topology_v1_datastoreinfo.yaml
