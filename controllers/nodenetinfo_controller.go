@@ -25,6 +25,7 @@ import (
 	"github.com/vmware/govmomi/view"
 	"github.com/vmware/govmomi/vim25"
 	"github.com/vmware/govmomi/vim25/mo"
+	"github.com/vmware/govmomi/vim25/types"
 	k8serr "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -130,12 +131,12 @@ func (r *NodeNetInfoReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 					net.Status.NetOverallStatus = string(n.OverallStatus)
 				} else if ref.Type == "DistributedVirtualPortgroup" {
 					// if it's a distributed network, define the n as mo.DistributedVirtualPortgroup
-					var n mo.DistributedVirtualPortgroup
+					var pg mo.DistributedVirtualPortgroup
 					net.Status.SwitchType = "Distributed"
 
 					// a property collector to retrieve objects by MOR
 					pc := property.DefaultCollector(r.VC)
-					err = pc.Retrieve(ctx, vm.Network, nil, &n)
+					err = pc.Retrieve(ctx, vm.Network, nil, &pg)
 					if err != nil {
 						msg = fmt.Sprintf("unable to retrieve VM DVPortGroup: error %s", err)
 						log.Info(msg)
@@ -143,8 +144,13 @@ func (r *NodeNetInfoReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 					}
 
 					// store the info in the status
-					net.Status.NetName = string(n.Name)
-					net.Status.NetOverallStatus = string(n.OverallStatus)
+					net.Status.NetName = string(pg.Name)
+					net.Status.NetOverallStatus = string(pg.OverallStatus)
+
+					// get vlanID
+					portConfig := pg.Config.DefaultPortConfig.(*types.VMwareDVSPortSetting)
+					vlan := portConfig.Vlan.(*types.VmwareDistributedVirtualSwitchVlanIdSpec)
+					net.Status.VlanId = vlan.VlanId
 
 				}
 			}

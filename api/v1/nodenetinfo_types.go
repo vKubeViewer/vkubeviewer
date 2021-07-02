@@ -34,7 +34,7 @@ type NodeNetInfoStatus struct {
 	// NetRef           string `json:"net_ref,omitempty"`
 	// this ref can't show as string, just leave it
 	NetOverallStatus string `json:"net_overall_status,omitempty"`
-	VlanId           int64  `json:"vlan_id,omitempty"`
+	VlanId           int32  `json:"vlan_id,omitempty"`
 	SwitchType       string `json:"switch_type,omitempty"`
 }
 

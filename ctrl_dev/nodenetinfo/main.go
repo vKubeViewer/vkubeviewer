@@ -63,34 +63,25 @@ func main() {
 
 					} else if v.Type == "DistributedVirtualPortgroup" {
 						fmt.Println("get here")
-						var n mo.DistributedVirtualPortgroup
+						var pg mo.DistributedVirtualPortgroup
 						Switchtype = "Distributed"
 
 						pc := property.DefaultCollector(c)
-						err = pc.Retrieve(ctx, vm.Network, nil, &n)
+						err = pc.Retrieve(ctx, vm.Network, nil, &pg)
 						if err != nil {
 							return err
 						}
-						Netname = n.Name
-						Overallstatus = string(n.OverallStatus)
+						Netname = pg.Name
+						Overallstatus = string(pg.OverallStatus)
 
-						// get vlanid
-						var dvs mo.DistributedVirtualSwitch
-						err = pc.RetrieveOne(ctx, *n.Config.DistributedVirtualSwitch, nil, &dvs)
-						if err != nil {
-							return err
+						portConfig := pg.Config.DefaultPortConfig.(*types.VMwareDVSPortSetting)
+						switch vlan := portConfig.Vlan.(type) {
+						case *types.VmwareDistributedVirtualSwitchVlanIdSpec:
+							Vlanid = vlan.VlanId
+							fmt.Printf("vlan id = %d\n", vlan.VlanId)
+						default:
+							fmt.Printf("%s type=%T\n", pg.Name, vlan)
 						}
-						fmt.Printf("%s", dvs.Uuid)
-
-						config := dvs.Config.(*types.VMwareDVSConfigInfo)
-						portConfig := config.DefaultPortConfig.(*types.VMwareDVSPortSetting)
-						vlan := portConfig.Vlan.(*types.VmwareDistributedVirtualSwitchVlanIdSpec)
-						fmt.Printf("vlan id=%d\n", vlan.VlanId)
-
-						//test := dvs.Config.GetDVSConfigInfo()
-						//fmt.Printf("%s, %T\n", test, test)
-						//test = test.DefaultPortConfig.GetDVPortSetting()
-						//fmt.Printf("%s, %T\n", test, test)
 
 					}
 
