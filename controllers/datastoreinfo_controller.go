@@ -20,6 +20,9 @@ import (
 	"context"
 	"fmt"
 
+	topologyv1 "vkubeviewer/api/v1"
+	"vkubeviewer/tool"
+
 	"github.com/go-logr/logr"
 	"github.com/vmware/govmomi/property"
 	"github.com/vmware/govmomi/view"
@@ -29,8 +32,6 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"vkubeviewer/tool"
-	topologyv1 "vkubeviewer/api/v1"
 )
 
 // DatastoreInfoReconciler reconciles a DatastoreInfo object
@@ -119,24 +120,26 @@ func (r *DatastoreInfoReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 
 			// get the Hosts attached to this datastore, type []types.DatastoreHostMount
 			HostMounts := ds.Host
+			var curHostsMounted []string
 
-			if len(dsinfo.Status.HostsMounted) != len(HostMounts) {
-				dsinfo.Status.HostsMounted = nil
-				// traverse all the HostMount
-				for _, HostMount := range HostMounts {
+			// traverse all the HostMount
+			for _, HostMount := range HostMounts {
 
-					// get the Host info
-					var h mo.HostSystem
-					pc := property.DefaultCollector(r.VC)
-					err = pc.RetrieveOne(ctx, HostMount.Key, nil, &h)
-					if err != nil {
-						msg := fmt.Sprintf("unable to retrieve HostSystem info: error %s", err)
-						log.Info(msg)
-						return ctrl.Result{}, err
-					}
-					// append the Host's Name into Hosts List
-					dsinfo.Status.HostsMounted = append(dsinfo.Status.HostsMounted, h.Summary.Config.Name)
+				// get the Host info
+				var h mo.HostSystem
+				pc := property.DefaultCollector(r.VC)
+				err = pc.RetrieveOne(ctx, HostMount.Key, nil, &h)
+				if err != nil {
+					msg := fmt.Sprintf("unable to retrieve HostSystem info: error %s", err)
+					log.Info(msg)
+					return ctrl.Result{}, err
 				}
+				// append the Host's Name into Hosts List
+				curHostsMounted = append(curHostsMounted, h.Summary.Config.Name)
+			}
+
+			if !tool.ArrayEqual(curHostsMounted, dsinfo.Status.HostsMounted) {
+				dsinfo.Status.HostsMounted = curHostsMounted
 			}
 
 		}
