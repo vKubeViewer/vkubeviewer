@@ -2,30 +2,24 @@
 # since it depends on service name and namespace that are out of this kustomize package.
 # It should be run by config/default
 resources:
-- bases/topology.vkubeviewer.com_fcdinfoes.yaml
-- bases/topology.vkubeviewer.com_vminfoes.yaml
 - bases/topology.vkubeviewer.com_hostinfoes.yaml
-- bases/topology.vkubeviewer.com_nodenetinfoes.yaml
-- bases/topology.vkubeviewer.com_datastoreinfoes.yaml
+- bases/topology.vkubeviewer.com_vminfoes.yaml
+- bases/topology.vkubeviewer.com_fcdinfoes.yaml
 #+kubebuilder:scaffold:crdkustomizeresource
 
 patchesStrategicMerge:
 # [WEBHOOK] To enable webhook, uncomment all the sections with [WEBHOOK] prefix.
 # patches here are for enabling the conversion webhook for each CRD
-#- patches/webhook_in_fcdinfoes.yaml
-#- patches/webhook_in_vminfoes.yaml
 #- patches/webhook_in_hostinfoes.yaml
-#- patches/webhook_in_nodenetinfoes.yaml
-#- patches/webhook_in_datastoreinfoes.yaml
+#- patches/webhook_in_vminfoes.yaml
+#- patches/webhook_in_fcdinfoes.yaml
 #+kubebuilder:scaffold:crdkustomizewebhookpatch
 
 # [CERTMANAGER] To enable webhook, uncomment all the sections with [CERTMANAGER] prefix.
 # patches here are for enabling the CA injection for each CRD
-#- patches/cainjection_in_fcdinfoes.yaml
-#- patches/cainjection_in_vminfoes.yaml
 #- patches/cainjection_in_hostinfoes.yaml
-#- patches/cainjection_in_nodenetinfoes.yaml
-#- patches/cainjection_in_datastoreinfoes.yaml
+#- patches/cainjection_in_vminfoes.yaml
+#- patches/cainjection_in_fcdinfoes.yaml
 #+kubebuilder:scaffold:crdkustomizecainjectionpatch
 
 # the following config is for teaching kustomize how to do kustomization for CRDs.
