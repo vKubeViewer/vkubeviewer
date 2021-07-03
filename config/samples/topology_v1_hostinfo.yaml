@@ -1,7 +1,7 @@
 apiVersion: topology.vkubeviewer.com/v1
 kind: HostInfo
 metadata:
-  name: hostinfo-host-k
+  name: hostinfo-host-h
 spec:
   # Add fields here
-  hostname: esxi-dell-k.rainpole.com
+  hostname: esxi-dell-h.rainpole.com
