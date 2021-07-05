@@ -196,8 +196,8 @@ kubectl create ns vkubeviewer-system
 
 ```
 kubectl create secret generic vc-creds-1 \
---from-literal='GOVMOMI_USERNAME=shaunak@vsphere.local' \
---from-literal='GOVMOMI_PASSWORD=VMware123!' \
+--from-literal='GOVMOMI_USERNAME= **Username**' \
+--from-literal='GOVMOMI_PASSWORD=**Password**' \
 --from-literal='GOVMOMI_URL=192.168.0.100' \
 -n fcdinfo-system
 secret/vc-creds created
