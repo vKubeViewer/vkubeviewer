@@ -21,7 +21,7 @@ The key problem for this project is that Kubernetes has no visibility on the und
 
 ## Quick-Start Guides
 
-Quick-Start guides are currently in production and will be uploaded in due course.
+[Quick-Start Guide](https://github.com/vKubeViewer/vkubeviewer/blob/Richard/docs/QuickStartGuide.md) 
 
 
 ## Current Feature Set
