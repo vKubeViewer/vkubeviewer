@@ -25,21 +25,24 @@ import (
 
 // DatastoreInfoSpec defines the desired state of DatastoreInfo
 type DatastoreInfoSpec struct {
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
-
-	// Foo is an example field of DatastoreInfo. Edit datastoreinfo_types.go to remove/update
-	Foo string `json:"foo,omitempty"`
+	Datastore string `json:"datastore"`
 }
 
 // DatastoreInfoStatus defines the observed state of DatastoreInfo
 type DatastoreInfoStatus struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
+	Type         string   `json:"type,omitempty"`
+	Status       string   `json:"status,omitempty"`
+	Capacity     string   `json:"capacity,omitempty"`
+	FreeSpace    string   `json:"free_space,omitempty"`
+	Accessible   bool     `json:"accessible,omitempty"`
+	HostsMounted []string `json:"hosts,omitempty"`
 }
 
-//+kubebuilder:object:root=true
-//+kubebuilder:subresource:status
+// +kubebuilder:validation:Optional
+// +kubebuilder:resource:shortName={"ds"}
+// +kubebuilder:printcolumn:name="Datastore",type=string,JSONPath=`.spec.datastore`
+// +kubebuilder:object:root=true
+// +kubebuilder:subresource:status
 
 // DatastoreInfo is the Schema for the datastoreinfoes API
 type DatastoreInfo struct {

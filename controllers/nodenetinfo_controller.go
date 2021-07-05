@@ -18,11 +18,18 @@ package controllers
 
 import (
 	"context"
+	"fmt"
 
+	"github.com/go-logr/logr"
+	"github.com/vmware/govmomi/property"
+	"github.com/vmware/govmomi/view"
+	"github.com/vmware/govmomi/vim25"
+	"github.com/vmware/govmomi/vim25/mo"
+	"github.com/vmware/govmomi/vim25/types"
+	k8serr "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	topologyv1 "vkubeviewer/api/v1"
 )
@@ -30,6 +37,8 @@ import (
 // NodeNetInfoReconciler reconciles a NodeNetInfo object
 type NodeNetInfoReconciler struct {
 	client.Client
+	VC     *vim25.Client
+	Log    logr.Logger
 	Scheme *runtime.Scheme
 }
 
@@ -47,11 +56,120 @@ type NodeNetInfoReconciler struct {
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.8.3/pkg/reconcile
 func (r *NodeNetInfoReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	_ = log.FromContext(ctx)
+	ctx = context.Background()
+	// ------------
+	// Log Session
+	// ------------
+	log := r.Log.WithValues("NodeNetInfo", req.NamespacedName)
+	net := &topologyv1.NodeNetInfo{}
 
-	// your logic here
+	// Log Output for failure
+	if err := r.Client.Get(ctx, req.NamespacedName, net); err != nil {
+		if !k8serr.IsNotFound(err) {
+			log.Error(err, "unable to fecth NodeNetInfo")
+		}
+		return ctrl.Result{}, client.IgnoreNotFound(err)
+	}
+
+	// Log Output for sucess
+	msg := fmt.Sprintf("received reconcile request for %q (namespace : %q)", net.GetName(), net.GetNamespace())
+	log.Info(msg)
+
+	// ------------
+	// Retrieve Session
+	// ------------
+
+	// Create a view manager
+
+	m := view.NewManager(r.VC)
+
+	// Create a container view of VirtualMachine objects
+
+	vvm, err := m.CreateContainerView(ctx, r.VC.ServiceContent.RootFolder, []string{"VirtualMachine"}, true)
+
+	if err != nil {
+		msg := fmt.Sprintf("unable to create container view for VirtualMachines: error %s", err)
+		log.Info(msg)
+		return ctrl.Result{}, err
+	}
+
+	defer vvm.Destroy(ctx)
+
+	// Retrieve VM information for all VMs
+
+	var vms []mo.VirtualMachine
+
+	err = vvm.Retrieve(ctx, []string{"VirtualMachine"}, nil, &vms)
+	if err != nil {
+		msg := fmt.Sprintf("unable to retrieve VM info: error %s", err)
+		log.Info(msg)
+		return ctrl.Result{}, err
+	}
+
+	// traverse all the VM
+	for _, vm := range vms {
+		// if the VM's name equals to Nodename
+		if vm.Summary.Config.Name == net.Spec.Nodename {
+			// traverse the network, in our operator, we consider only single network
+			for _, ref := range vm.Network {
+				if ref.Type == "Network" {
+					// if it's a normal Network, define the n as DistributedVirtualPortgroup mo.Network
+					var n mo.Network
+					net.Status.SwitchType = "Standard"
+
+					// a property collector to retrieve objects by MOR
+					pc := property.DefaultCollector(r.VC)
+					err = pc.Retrieve(ctx, vm.Network, nil, &n)
+					if err != nil {
+						msg = fmt.Sprintf("unable to retrieve VM Network: error %s", err)
+						log.Info(msg)
+						return ctrl.Result{}, err
+					}
+
+					// store the info in the status
+					net.Status.NetName = string(n.Name)
+					net.Status.NetOverallStatus = string(n.OverallStatus)
+				} else if ref.Type == "DistributedVirtualPortgroup" {
+					// if it's a distributed network, define the n as mo.DistributedVirtualPortgroup
+					var pg mo.DistributedVirtualPortgroup
+					net.Status.SwitchType = "Distributed"
+
+					// a property collector to retrieve objects by MOR
+					pc := property.DefaultCollector(r.VC)
+					err = pc.Retrieve(ctx, vm.Network, nil, &pg)
+					if err != nil {
+						msg = fmt.Sprintf("unable to retrieve VM DVPortGroup: error %s", err)
+						log.Info(msg)
+						return ctrl.Result{}, err
+					}
+
+					// store the info in the status
+					net.Status.NetName = string(pg.Name)
+					net.Status.NetOverallStatus = string(pg.OverallStatus)
+
+					// get vlanID
+					portConfig := pg.Config.DefaultPortConfig.(*types.VMwareDVSPortSetting)
+					vlan := portConfig.Vlan.(*types.VmwareDistributedVirtualSwitchVlanIdSpec)
+					net.Status.VlanId = vlan.VlanId
+
+				}
+			}
+
+		}
+	}
+
+	// ------------
+	// Update Session
+	// ------------
+
+	// update the status
+	if err := r.Status().Update(ctx, net); err != nil {
+		log.Error(err, "unable to update VMInfo status")
+		return ctrl.Result{}, err
+	}
 
 	return ctrl.Result{}, nil
+
 }
 
 // SetupWithManager sets up the controller with the Manager.
