@@ -20,6 +20,8 @@ import (
 	"context"
 	"fmt"
 
+	topologyv1 "vkubeviewer/api/v1"
+
 	"github.com/go-logr/logr"
 	"github.com/vmware/govmomi/property"
 	"github.com/vmware/govmomi/view"
@@ -29,8 +31,6 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-
-	topologyv1 "vkubeviewer/api/v1"
 )
 
 // DatastoreInfoReconciler reconciles a DatastoreInfo object
@@ -113,8 +113,8 @@ func (r *DatastoreInfoReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 			// Store info into the status
 			dsinfo.Status.Type = ds.Summary.Type
 			dsinfo.Status.Status = string(ds.OverallStatus)
-			dsinfo.Status.Capacity = tool.ByteCountIEC(ds.Summary.Capacity)
-			dsinfo.Status.FreeSpace = tool.ByteCountIEC(ds.Summary.FreeSpace)
+			dsinfo.Status.Capacity = ByteCountIEC(ds.Summary.Capacity)
+			dsinfo.Status.FreeSpace = ByteCountIEC(ds.Summary.FreeSpace)
 			dsinfo.Status.Accessible = ds.Summary.Accessible
 
 			// get the Hosts attached to this datastore, type []types.DatastoreHostMount
@@ -137,7 +137,7 @@ func (r *DatastoreInfoReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 				curHostsMounted = append(curHostsMounted, h.Summary.Config.Name)
 			}
 
-			if !tool.ArrayEqual(curHostsMounted, dsinfo.Status.HostsMounted) {
+			if !ArrayEqual(curHostsMounted, dsinfo.Status.HostsMounted) {
 				dsinfo.Status.HostsMounted = curHostsMounted
 			}
 
@@ -162,4 +162,32 @@ func (r *DatastoreInfoReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&topologyv1.DatastoreInfo{}).
 		Complete(r)
+}
+
+// this brilliant code is from https://yourbasic.org/golang/formatting-byte-size-to-human-readable-format/
+// change it to 2 digts float
+func ByteCountIEC(b int64) string {
+	const unit = 1024
+	if b < unit {
+		return fmt.Sprintf("%d B", b)
+	}
+	div, exp := int64(unit), 0
+	for n := b / unit; n >= unit; n /= unit {
+		div *= unit
+		exp++
+	}
+	return fmt.Sprintf("%.2f %ciB",
+		float64(b)/float64(div), "KMGTPE"[exp])
+}
+
+func ArrayEqual(first, second []string) bool {
+	if len(first) != len(second) {
+		return false
+	}
+	for i, v := range first {
+		if second[i] != v {
+			return false
+		}
+	}
+	return true
 }
