@@ -227,6 +227,7 @@ func main() {
 
 	if err = (&controllers.NodeNetInfoReconciler{
 		Client: mgr.GetClient(),
+		// this two lines with VC and Log should be added manually
 		VC:     c1,
 		Log:    ctrl.Log.WithName("controllers").WithName("NodeNetInfo"),
 		Scheme: mgr.GetScheme(),
