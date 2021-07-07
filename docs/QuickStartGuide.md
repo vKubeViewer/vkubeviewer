@@ -14,7 +14,9 @@
 
 **Step: 1.1:** Run the go-pack.sh script to get required go packages
 
-
+```
+./ go-pack.sh
+```
 
 **Step 2:** Get the **vKubeViewer** operator to your desktop
 
