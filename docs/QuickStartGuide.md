@@ -76,7 +76,7 @@ nodename: k8s-worker-01
 **Step 6:** **Apply** the above YAML to create your custom resource
 
 ```
-kubectl apply -f topology_v1_vminfo**.**yaml
+kubectl apply -f topology_v1_vminfo.yaml
 ```
 
 **Step 7:** **Query** the CR we just created, check if the **nodename** field is also printed.
@@ -93,17 +93,16 @@ k8s-worker-1   k8s-worker-01
 **Note:** Skip to step 11 if you want to build the manager on a pod using a publicly accessible image.
 
 ```
-cd ..
-cd ..
+cd ../..
 make manager 
 ```
 
 This should have build the manager binary in bin/manager. Before running the manager in standalone code, we need to set three environmental variables to allow us to connect to the vCenter Server. They are:
 
 ```
-export GOVMOMI_HOSTNAME=192.168.0.100
-export GOVMOMI_USERNAME=administrator@vsphere.local
-export GOVMOMI_PASSWORD='My_VC_Password'
+export GOVMOMI_URL=Your_Vcenter_URL
+export GOVMOMI_USERNAME=Your_Username@vsphere.local
+export GOVMOMI_PASSWORD=Your_VC_Password
 ```
 
 **Step 9:** The manager can now be started in standalone mode, run:
@@ -183,7 +182,7 @@ docker login —username dockerID —password 'My_password'
 Set the environment variable IMG to point at the required image.
 
 ```
-export [IMG=docker.io/vkubeviewer/controller-manager:v3](http://img=docker.io/vkubeviewer/controller-manager:v3)
+export IMG=docker.io/vkubeviewer/controller-manager:latest
 ```
 
 **Step 12:** Create the **namespace** and **secret** used by the controller pod.
@@ -199,8 +198,8 @@ kubectl create secret generic vc-creds-1 \
 --from-literal='GOVMOMI_USERNAME= **Username**' \
 --from-literal='GOVMOMI_PASSWORD=**Password**' \
 --from-literal='GOVMOMI_URL=192.168.0.100' \
--n fcdinfo-system
-secret/vc-creds created
+-n vkubeviewer-system
+[output]secret/vc-creds-1 created
 ```
 
 **Step13:** Create the deployment with 1 replica set which ensures that the controller pod keeps running. run:
@@ -221,8 +220,7 @@ vkubeviewer-controller-manager-566c6fffdb-fxjr2   2/2     Running   0          2
 **Step 15:** Re-apply the sample YAMLs for the custom resources to be monitored by the above pod. 
 
 ```
-cd config/samples
-kubectl apply -f .
+kustomize build config/samples | kubectl create -f -
 ```
 
 **Step 16:** Finally, we can run the below command to see the required fields in the status field of the CRDs.
@@ -267,6 +265,7 @@ metadata:
 Remove the CRDs
 
 ```
+kustomize build config/samples | kubectl delete -f -
 make uninstall
 ```
 
