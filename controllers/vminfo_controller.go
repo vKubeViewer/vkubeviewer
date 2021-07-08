@@ -19,6 +19,7 @@ package controllers
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/go-logr/logr"
 	"github.com/vmware/govmomi/view"
@@ -127,7 +128,7 @@ func (r *VMInfoReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 		return ctrl.Result{}, err
 	}
 
-	return ctrl.Result{}, nil
+	return ctrl.Result{RequeueAfter: time.Duration(1) * time.Minute}, nil
 }
 
 // SetupWithManager sets up the controller with the Manager.

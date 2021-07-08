@@ -19,6 +19,7 @@ package controllers
 import (
 	"context"
 	"fmt"
+	"time"
 
 	topologyv1 "vkubeviewer/api/v1"
 
@@ -154,7 +155,9 @@ func (r *DatastoreInfoReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 		return ctrl.Result{}, err
 	}
 
-	return ctrl.Result{}, nil
+	return ctrl.Result{
+		RequeueAfter: time.Duration(1) * time.Minute,
+	}, nil
 }
 
 // SetupWithManager sets up the controller with the Manager.

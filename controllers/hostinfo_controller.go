@@ -19,6 +19,7 @@ package controllers
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/go-logr/logr"
 	"github.com/vmware/govmomi/view"
@@ -100,7 +101,8 @@ func (r *HostInfoReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 	if err != nil {
 		msg := fmt.Sprintf("unable to retrieve HostSystem summary: error %s", err)
 		log.Info(msg)
-		return ctrl.Result{}, err
+		return ctrl.Result{
+			RequeueAfter: time.Duration(1) * time.Minute}, err
 	}
 
 	//
@@ -123,7 +125,7 @@ func (r *HostInfoReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 		return ctrl.Result{}, err
 	}
 
-	return ctrl.Result{}, nil
+	return ctrl.Result{RequeueAfter: time.Duration(1) * time.Minute}, nil
 }
 
 // SetupWithManager sets up the controller with the Manager.
