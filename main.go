@@ -185,7 +185,7 @@ func main() {
 	dc, err := finder.DefaultDatacenter(ctx)
 
 	if err != nil {
-		setupLog.Error(err, "FCDInfo: Could not get default datacenter")
+		setupLog.Error(err, "Manager: Could not get default datacenter")
 	} else {
 		finder.SetDatacenter(dc)
 	}

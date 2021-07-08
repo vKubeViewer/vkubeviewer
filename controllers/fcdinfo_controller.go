@@ -62,9 +62,13 @@ type FCDInfoReconciler struct {
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.8.3/pkg/reconcile
 func (r *FCDInfoReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	ctx = context.Background()
+	// ------------
+	// Log Session
+	// ------------
 	log := r.Log.WithValues("FCDInfo", req.NamespacedName)
-
 	fcd := &topologyv1.FCDInfo{}
+
+	// Log Output for failure
 	if err := r.Client.Get(ctx, req.NamespacedName, fcd); err != nil {
 		if !k8serr.IsNotFound(err) {
 			log.Error(err, "unable to fetch FCDInfo")
@@ -72,18 +76,26 @@ func (r *FCDInfoReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
+	// Log Output for sucess
 	msg := fmt.Sprintf("received reconcile request for %q (namespace: %q)", fcd.GetName(), fcd.GetNamespace())
 	log.Info(msg)
+
+	// ------------
+	// Retrieve Session
+	// ------------
 
 	//
 	// Find the datastores available on this vSphere Infrastructure
 	//
 
+	// dss - datastores
 	dss, err := r.Finder.DatastoreList(ctx, "*")
+
 	if err != nil {
 		log.Error(err, "FCDInfo: Could not get datastore list")
 		return ctrl.Result{}, err
 	} else {
+		// find list of datastore
 		msg := fmt.Sprintf("FCDInfo: Number of datastores found - %v", len(dss))
 		log.Info(msg)
 
@@ -100,7 +112,6 @@ func (r *FCDInfoReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		//
 		// Retrieve name property for all datastore
 		//
-
 		var dst []mo.Datastore
 		err = pc.Retrieve(ctx, refs, []string{"name"}, &dst)
 		if err != nil {
@@ -134,13 +145,9 @@ func (r *FCDInfoReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 					log.Info(msg)
 
 					fcd.Status.SizeMB = int64(idinfo.Config.CapacityInMB)
-
 					backing := idinfo.Config.BaseConfigInfo.Backing.(*types.BaseConfigInfoDiskFileBackingInfo)
 					fcd.Status.FilePath = string(backing.FilePath)
 					fcd.Status.ProvisioningType = string(backing.ProvisioningType)
-				} else {
-					msg := fmt.Sprintf("FCDInfo: %v does not match %v", idinfo.Config.BaseConfigInfo.Name, fcd.Spec.PVId)
-					log.Info(msg)
 				}
 			}
 		}
