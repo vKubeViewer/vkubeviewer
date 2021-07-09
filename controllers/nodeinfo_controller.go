@@ -22,9 +22,11 @@ import (
 	"time"
 
 	"github.com/go-logr/logr"
+	"github.com/vmware/govmomi/property"
 	"github.com/vmware/govmomi/view"
 	"github.com/vmware/govmomi/vim25"
 	"github.com/vmware/govmomi/vim25/mo"
+	"github.com/vmware/govmomi/vim25/types"
 	k8serr "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -57,10 +59,15 @@ type NodeInfoReconciler struct {
 func (r *NodeInfoReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 
 	ctx = context.Background()
+	// ------------
+	// Log Session
+	// ------------
 	log := r.Log.WithValues("NodeInfo", req.NamespacedName)
 
-	ch := &topologyv1.NodeInfo{}
-	if err := r.Client.Get(ctx, req.NamespacedName, ch); err != nil {
+	node := &topologyv1.NodeInfo{}
+
+	// Log Output for failure
+	if err := r.Client.Get(ctx, req.NamespacedName, node); err != nil {
 		// add some debug information if it's not a NotFound error
 		if !k8serr.IsNotFound(err) {
 			log.Error(err, "unable to fetch NodeInfo")
@@ -68,20 +75,20 @@ func (r *NodeInfoReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
-	msg := fmt.Sprintf("received reconcile request for %q (namespace: %q)", ch.GetName(), ch.GetNamespace())
+	// Log Output for sucess
+	msg := fmt.Sprintf("received reconcile request for %q (namespace: %q)", node.GetName(), node.GetNamespace())
 	log.Info(msg)
 
-	//
-	// Create a view manager
-	//
+	// ------------
+	// Retrieve Session
+	// ------------
 
+	// Create a view manager
 	m := view.NewManager(r.VC)
 
-	//
 	// Create a container view of VirtualMachine objects
-	//
-
-	v, err := m.CreateContainerView(ctx, r.VC.ServiceContent.RootFolder, []string{"VirtualMachine"}, true)
+	// vvm - viewer of virtual machine
+	vvm, err := m.CreateContainerView(ctx, r.VC.ServiceContent.RootFolder, []string{"VirtualMachine"}, true)
 
 	if err != nil {
 		msg := fmt.Sprintf("unable to create container view for VirtualMachines: error %s", err)
@@ -89,18 +96,16 @@ func (r *NodeInfoReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 		return ctrl.Result{}, err
 	}
 
-	defer v.Destroy(ctx)
+	defer vvm.Destroy(ctx)
 
-	//
 	// Retrieve summary property for all VMs
-	//
-
+	// vms - VirtualMachines
 	var vms []mo.VirtualMachine
 
-	err = v.Retrieve(ctx, []string{"VirtualMachine"}, []string{"summary"}, &vms)
+	err = vvm.Retrieve(ctx, []string{"VirtualMachine"}, nil, &vms)
 
 	if err != nil {
-		msg := fmt.Sprintf("unable to retrieve VM summary: error %s", err)
+		msg := fmt.Sprintf("unable to retrieve VM infomartion: error %s", err)
 		log.Info(msg)
 		return ctrl.Result{}, err
 	}
@@ -109,21 +114,76 @@ func (r *NodeInfoReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 	// Print summary for host in NodeInfo specification info
 	//
 
+	// traverse all the VM
 	for _, vm := range vms {
-		if vm.Summary.Config.Name == ch.Spec.Nodename {
-			ch.Status.GuestId = string(vm.Summary.Guest.GuestId)
-			ch.Status.TotalCPU = int64(vm.Summary.Config.NumCpu)
-			ch.Status.ResvdCPU = int64(vm.Summary.Config.CpuReservation)
-			ch.Status.TotalMem = int64(vm.Summary.Config.MemorySizeMB)
-			ch.Status.ResvdMem = int64(vm.Summary.Config.MemoryReservation)
-			ch.Status.PowerState = string(vm.Summary.Runtime.PowerState)
-			ch.Status.HwVersion = string(vm.Summary.Guest.HwVersion)
-			ch.Status.IpAddress = string(vm.Summary.Guest.IpAddress)
-			ch.Status.PathToVM = string(vm.Summary.Config.VmPathName)
+		// if the VM's name equals to Nodename
+		if vm.Summary.Config.Name == node.Spec.Nodename {
+
+			// store VM information
+			node.Status.VMGuestId = string(vm.Summary.Guest.GuestId)
+			node.Status.VMTotalCPU = int64(vm.Summary.Config.NumCpu)
+			node.Status.VMResvdCPU = int64(vm.Summary.Config.CpuReservation)
+			node.Status.VMTotalMem = int64(vm.Summary.Config.MemorySizeMB)
+			node.Status.VMResvdMem = int64(vm.Summary.Config.MemoryReservation)
+			node.Status.VMPowerState = string(vm.Summary.Runtime.PowerState)
+			node.Status.VMHwVersion = string(vm.Summary.Guest.HwVersion)
+			node.Status.VMIpAddress = string(vm.Summary.Guest.IpAddress)
+			node.Status.PathToVM = string(vm.Summary.Config.VmPathName)
+
+			// traverse the network, in our operator, we consider only single network
+			for _, ref := range vm.Network {
+				if ref.Type == "Network" {
+					// if it's a normal Network, define the n as DistributedVirtualPortgroup mo.Network
+					var n mo.Network
+					node.Status.SwitchType = "Standard"
+
+					// a property collector to retrieve objects by MOR
+					pc := property.DefaultCollector(r.VC)
+					err = pc.Retrieve(ctx, vm.Network, nil, &n)
+					if err != nil {
+						msg = fmt.Sprintf("unable to retrieve VM Network: error %s", err)
+						log.Info(msg)
+						return ctrl.Result{}, err
+					}
+
+					// store the info in the status
+					node.Status.NetName = string(n.Name)
+					node.Status.NetOverallStatus = string(n.OverallStatus)
+				} else if ref.Type == "DistributedVirtualPortgroup" {
+					// if it's a distributed network, define the n as mo.DistributedVirtualPortgroup
+					var pg mo.DistributedVirtualPortgroup
+					node.Status.SwitchType = "Distributed"
+
+					// a property collector to retrieve objects by MOR
+					pc := property.DefaultCollector(r.VC)
+					err = pc.Retrieve(ctx, vm.Network, nil, &pg)
+					if err != nil {
+						msg = fmt.Sprintf("unable to retrieve VM DVPortGroup: error %s", err)
+						log.Info(msg)
+						return ctrl.Result{}, err
+					}
+
+					// store the info in the status
+					node.Status.NetName = string(pg.Name)
+					node.Status.NetOverallStatus = string(pg.OverallStatus)
+
+					// get vlanID
+					portConfig := pg.Config.DefaultPortConfig.(*types.VMwareDVSPortSetting)
+					vlan := portConfig.Vlan.(*types.VmwareDistributedVirtualSwitchVlanIdSpec)
+					node.Status.VlanId = vlan.VlanId
+
+				}
+			}
+
 		}
 	}
 
-	if err := r.Status().Update(ctx, ch); err != nil {
+	// ------------
+	// Update Session
+	// ------------
+
+	// update the status
+	if err := r.Status().Update(ctx, node); err != nil {
 		log.Error(err, "unable to update NodeInfo status")
 		return ctrl.Result{}, err
 	}

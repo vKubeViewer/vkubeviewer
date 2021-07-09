@@ -30,15 +30,20 @@ type NodeInfoSpec struct {
 
 // NodeInfoStatus defines the observed state of NodeInfo
 type NodeInfoStatus struct {
-	GuestId    string `json:"guestId"`
-	TotalCPU   int64  `json:"totalCPU"`
-	ResvdCPU   int64  `json:"resvdCPU"`
-	TotalMem   int64  `json:"totalMem"`
-	ResvdMem   int64  `json:"resvdMem"`
-	PowerState string `json:"powerState"`
-	HwVersion  string `json:"hwVersion"`
-	IpAddress  string `json:"ipAddress"`
-	PathToVM   string `json:"pathToVM"`
+	VMGuestId    string `json:"vm_guest_id,omitempty"`
+	VMTotalCPU   int64  `json:"vm_total_cpu,omitempty"`
+	VMResvdCPU   int64  `json:"vm_resvd_cpu,omitempty"`
+	VMTotalMem   int64  `json:"vm_total_mem,omitempty"`
+	VMResvdMem   int64  `json:"vm_resvd_mem,omitempty"`
+	VMPowerState string `json:"vm_power_state,omitempty"`
+	VMHwVersion  string `json:"vm_hw_version,omitempty"`
+	VMIpAddress  string `json:"vm_ip_address,omitempty"`
+	PathToVM     string `json:"path_to_vm,omitempty"`
+
+	NetName          string `json:"net_name,omitempty"`
+	NetOverallStatus string `json:"net_overall_status,omitempty"`
+	VlanId           int32  `json:"vlan_id,omitempty"`
+	SwitchType       string `json:"switch_type,omitempty"`
 }
 
 // +kubebuilder:validation:Optional
