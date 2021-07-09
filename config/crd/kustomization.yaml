@@ -5,7 +5,6 @@ resources:
 - bases/topology.vkubeviewer.com_hostinfoes.yaml
 - bases/topology.vkubeviewer.com_vminfoes.yaml
 - bases/topology.vkubeviewer.com_fcdinfoes.yaml
-- bases/topology.vkubeviewer.com_nodenetinfoes.yaml
 - bases/topology.vkubeviewer.com_datastoreinfoes.yaml
 #+kubebuilder:scaffold:crdkustomizeresource
 
@@ -15,7 +14,6 @@ patchesStrategicMerge:
 #- patches/webhook_in_hostinfoes.yaml
 #- patches/webhook_in_vminfoes.yaml
 #- patches/webhook_in_fcdinfoes.yaml
-#- patches/webhook_in_nodenetinfoes.yaml
 #- patches/webhook_in_datastoreinfoes.yaml
 #+kubebuilder:scaffold:crdkustomizewebhookpatch
 
@@ -24,7 +22,6 @@ patchesStrategicMerge:
 #- patches/cainjection_in_hostinfoes.yaml
 #- patches/cainjection_in_vminfoes.yaml
 #- patches/cainjection_in_fcdinfoes.yaml
-#- patches/cainjection_in_nodenetinfoes.yaml
 #- patches/cainjection_in_datastoreinfoes.yaml
 #+kubebuilder:scaffold:crdkustomizecainjectionpatch
 

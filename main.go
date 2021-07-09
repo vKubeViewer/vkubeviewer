@@ -225,16 +225,6 @@ func main() {
 	}
 	//-----
 
-	if err = (&controllers.NodeNetInfoReconciler{
-		Client: mgr.GetClient(),
-		// this two lines with VC and Log should be added manually
-		VC:     c1,
-		Log:    ctrl.Log.WithName("controllers").WithName("NodeNetInfo"),
-		Scheme: mgr.GetScheme(),
-	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "NodeNetInfo")
-		os.Exit(1)
-	}
 	if err = (&controllers.DatastoreInfoReconciler{
 		Client: mgr.GetClient(),
 		VC:     c1,
