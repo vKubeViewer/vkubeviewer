@@ -4,4 +4,4 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     cert-manager.io/inject-ca-from: $(CERTIFICATE_NAMESPACE)/$(CERTIFICATE_NAME)
-  name: vminfoes.topology.vkubeviewer.com
+  name: nodeinfoes.topology.vkubeviewer.com

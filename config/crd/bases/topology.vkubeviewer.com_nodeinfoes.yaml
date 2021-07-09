@@ -6,16 +6,16 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.4.1
   creationTimestamp: null
-  name: vminfoes.topology.vkubeviewer.com
+  name: nodeinfoes.topology.vkubeviewer.com
 spec:
   group: topology.vkubeviewer.com
   names:
-    kind: VMInfo
-    listKind: VMInfoList
-    plural: vminfoes
+    kind: NodeInfo
+    listKind: NodeInfoList
+    plural: nodeinfoes
     shortNames:
     - ch
-    singular: vminfo
+    singular: nodeinfo
   scope: Namespaced
   versions:
   - additionalPrinterColumns:
@@ -25,7 +25,7 @@ spec:
     name: v1
     schema:
       openAPIV3Schema:
-        description: VMInfo is the Schema for the vminfoes API
+        description: NodeInfo is the Schema for the nodeinfoes API
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation
@@ -40,13 +40,13 @@ spec:
           metadata:
             type: object
           spec:
-            description: VMInfoSpec defines the desired state of VMInfo
+            description: NodeInfoSpec defines the desired state of NodeInfo
             properties:
               nodename:
                 type: string
             type: object
           status:
-            description: VMInfoStatus defines the observed state of VMInfo
+            description: NodeInfoStatus defines the observed state of NodeInfo
             properties:
               guestId:
                 type: string

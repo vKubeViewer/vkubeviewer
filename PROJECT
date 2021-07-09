@@ -19,7 +19,7 @@ resources:
   controller: true
   domain: vkubeviewer.com
   group: topology
-  kind: VMInfo
+  kind: NodeInfo
   path: vkubeviewer/api/v1
   version: v1
 - api:

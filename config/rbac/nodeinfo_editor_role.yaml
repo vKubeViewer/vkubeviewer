@@ -1,13 +1,13 @@
-# permissions for end users to edit vminfoes.
+# permissions for end users to edit nodeinfoes.
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: vminfo-editor-role
+  name: nodeinfo-editor-role
 rules:
 - apiGroups:
   - topology.vkubeviewer.com
   resources:
-  - vminfoes
+  - nodeinfoes
   verbs:
   - create
   - delete
@@ -19,6 +19,6 @@ rules:
 - apiGroups:
   - topology.vkubeviewer.com
   resources:
-  - vminfoes/status
+  - nodeinfoes/status
   verbs:
   - get

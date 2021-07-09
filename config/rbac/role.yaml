@@ -87,7 +87,7 @@ rules:
 - apiGroups:
   - topology.vkubeviewer.com
   resources:
-  - vminfoes
+  - nodeinfoes
   verbs:
   - create
   - delete
@@ -99,13 +99,13 @@ rules:
 - apiGroups:
   - topology.vkubeviewer.com
   resources:
-  - vminfoes/finalizers
+  - nodeinfoes/finalizers
   verbs:
   - update
 - apiGroups:
   - topology.vkubeviewer.com
   resources:
-  - vminfoes/status
+  - nodeinfoes/status
   verbs:
   - get
   - patch

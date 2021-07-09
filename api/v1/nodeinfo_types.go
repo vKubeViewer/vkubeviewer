@@ -23,13 +23,13 @@ import (
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
-// VMInfoSpec defines the desired state of VMInfo
-type VMInfoSpec struct {
+// NodeInfoSpec defines the desired state of NodeInfo
+type NodeInfoSpec struct {
 	Nodename string `json:"nodename"`
 }
 
-// VMInfoStatus defines the observed state of VMInfo
-type VMInfoStatus struct {
+// NodeInfoStatus defines the observed state of NodeInfo
+type NodeInfoStatus struct {
 	GuestId    string `json:"guestId"`
 	TotalCPU   int64  `json:"totalCPU"`
 	ResvdCPU   int64  `json:"resvdCPU"`
@@ -47,24 +47,24 @@ type VMInfoStatus struct {
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 
-// VMInfo is the Schema for the vminfoes API
-type VMInfo struct {
+// NodeInfo is the Schema for the nodeinfoes API
+type NodeInfo struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   VMInfoSpec   `json:"spec,omitempty"`
-	Status VMInfoStatus `json:"status,omitempty"`
+	Spec   NodeInfoSpec   `json:"spec,omitempty"`
+	Status NodeInfoStatus `json:"status,omitempty"`
 }
 
 //+kubebuilder:object:root=true
 
-// VMInfoList contains a list of VMInfo
-type VMInfoList struct {
+// NodeInfoList contains a list of NodeInfo
+type NodeInfoList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []VMInfo `json:"items"`
+	Items           []NodeInfo `json:"items"`
 }
 
 func init() {
-	SchemeBuilder.Register(&VMInfo{}, &VMInfoList{})
+	SchemeBuilder.Register(&NodeInfo{}, &NodeInfoList{})
 }

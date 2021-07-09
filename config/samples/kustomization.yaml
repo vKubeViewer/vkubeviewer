@@ -1,6 +1,6 @@
 resources:
 - topology_v1_fcdinfo.yaml
 - topology_v1_hostinfo.yaml
-- topology_v1_vminfo.yaml
-- topology_v1_vminfo2.yaml
+- topology_v1_nodeinfo.yaml
+- topology_v1_nodeinfo2.yaml
 - topology_v1_datastoreinfo.yaml

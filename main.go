@@ -78,12 +78,12 @@ func vlogin(ctx context.Context, vc, user, pwd string) (*vim25.Client, *govmomi.
 	u, err := soap.ParseURL(vc)
 
 	if u == nil {
-		setupLog.Error(err, "Unable to parse URL. Are required environment variables set?", "controller", "VMInfo")
+		setupLog.Error(err, "Unable to parse URL. Are required environment variables set?", "controller", "NodeInfo")
 		os.Exit(1)
 	}
 
 	if err != nil {
-		setupLog.Error(err, "URL parsing not successful", "controller", "VMInfo")
+		setupLog.Error(err, "URL parsing not successful", "controller", "NodeInfo")
 		os.Exit(1)
 	}
 
@@ -110,14 +110,14 @@ func vlogin(ctx context.Context, vc, user, pwd string) (*vim25.Client, *govmomi.
 	err = s.Login(ctx, c1, nil)
 
 	if err != nil {
-		setupLog.Error(err, "FCDInfo: vim25 login not successful", "controller", "VMInfo")
+		setupLog.Error(err, "FCDInfo: vim25 login not successful", "controller", "NodeInfo")
 		os.Exit(1)
 	}
 
 	c2, err := govmomi.NewClient(ctx, u, insecure)
 
 	if err != nil {
-		setupLog.Error(err, "FCDInfo: gomvomi login not successful", "controller", "VMInfo")
+		setupLog.Error(err, "FCDInfo: gomvomi login not successful", "controller", "NodeInfo")
 		os.Exit(1)
 	}
 
@@ -204,13 +204,13 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err = (&controllers.VMInfoReconciler{
+	if err = (&controllers.NodeInfoReconciler{
 		Client: mgr.GetClient(),
 		VC:     c1,
-		Log:    ctrl.Log.WithName("controllers").WithName("VMInfo"),
+		Log:    ctrl.Log.WithName("controllers").WithName("NodeInfo"),
 		Scheme: mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "VMInfo")
+		setupLog.Error(err, "unable to create controller", "controller", "NodeInfo")
 		os.Exit(1)
 	}
 

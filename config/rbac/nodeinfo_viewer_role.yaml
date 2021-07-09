@@ -1,13 +1,13 @@
-# permissions for end users to view vminfoes.
+# permissions for end users to view nodeinfoes.
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: vminfo-viewer-role
+  name: nodeinfo-viewer-role
 rules:
 - apiGroups:
   - topology.vkubeviewer.com
   resources:
-  - vminfoes
+  - nodeinfoes
   verbs:
   - get
   - list
@@ -15,6 +15,6 @@ rules:
 - apiGroups:
   - topology.vkubeviewer.com
   resources:
-  - vminfoes/status
+  - nodeinfoes/status
   verbs:
   - get

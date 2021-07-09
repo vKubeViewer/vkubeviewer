@@ -44,16 +44,16 @@ make install
 kubectl get crd
 ```
 
-**Step 5**: **Edit** the CR sample yaml in *config/samples* folder, choose the one you want to view. For instance to view VM information, edit the spec field and put your VM name in **nodename**  field in ***config/samples/topology_v1_vminfo.yaml*** as shown below:
+**Step 5**: **Edit** the CR sample yaml in *config/samples* folder, choose the one you want to view. For instance to view VM information, edit the spec field and put your VM name in **nodename**  field in ***config/samples/topology_v1_nodeinfo.yaml*** as shown below:
 
 ```
 cd config/samples
-cat topology_v1_vminfo.yaml 
+cat topology_v1_nodeinfo.yaml 
 ```
 
 ```
 apiVersion: topology.vkubeviewer.com/v1
-kind: VMInfo
+kind: NodeInfo
 metadata:
 name: k8s-worker-1
 spec:
@@ -64,13 +64,13 @@ nodename: k8s-worker-01
 **Step 6:** **Apply** the above YAML to create your custom resource
 
 ```
-kubectl apply -f topology_v1_vminfo.yaml
+kubectl apply -f topology_v1_nodeinfo.yaml
 ```
 
 **Step 7:** **Query** the CR we just created, check if the **nodename** field is also printed.
 
 ```
-kubectl get vminfo
+kubectl get nodeinfo
 
 NAME           NODENAME
 k8s-worker-1   k8s-worker-01
@@ -105,17 +105,17 @@ The output should look like:
 2021-06-30T16:35:05.649+0100	INFO	controller-runtime.metrics	metrics server is starting to listen	{"addr": ":8080"}
 2021-06-30T16:35:05.650+0100	INFO	setup	starting manager
 2021-06-30T16:35:05.650+0100	INFO	controller-runtime.manager.controller.fcdinfo	Starting EventSource	{"reconciler group": "[topology.vkubeviewer.com](http://topology.vkubeviewer.com/)", "reconciler kind": "FCDInfo", "source": "kind source: /, Kind="}
-2021-06-30T16:35:05.650+0100	INFO	controller-runtime.manager.controller.vminfo	Starting EventSource	{"reconciler group": "[topology.vkubeviewer.com](http://topology.vkubeviewer.com/)", "reconciler kind": "VMInfo", "source": "kind source: /, Kind="}
+2021-06-30T16:35:05.650+0100	INFO	controller-runtime.manager.controller.nodeinfo	Starting EventSource	{"reconciler group": "[topology.vkubeviewer.com](http://topology.vkubeviewer.com/)", "reconciler kind": "NodeInfo", "source": "kind source: /, Kind="}
 2021-06-30T16:35:05.650+0100	INFO	controller-runtime.manager.controller.hostinfo	Starting EventSource	{"reconciler group": "[topology.vkubeviewer.com](http://topology.vkubeviewer.com/)", "reconciler kind": "HostInfo", "source": "kind source: /, Kind="}
 2021-06-30T16:35:05.650+0100	INFO	controller-runtime.manager	starting metrics server	{"path": "/metrics"}
 2021-06-30T16:35:05.751+0100	INFO	controller-runtime.manager.controller.hostinfo	Starting Controller	{"reconciler group": "[topology.vkubeviewer.com](http://topology.vkubeviewer.com/)", "reconciler kind": "HostInfo"}
-2021-06-30T16:35:05.751+0100	INFO	controller-runtime.manager.controller.vminfo	Starting Controller	{"reconciler group": "[topology.vkubeviewer.com](http://topology.vkubeviewer.com/)", "reconciler kind": "VMInfo"}
-2021-06-30T16:35:05.751+0100	INFO	controller-runtime.manager.controller.vminfo	Starting workers	{"reconciler group": "[topology.vkubeviewer.com](http://topology.vkubeviewer.com/)", "reconciler kind": "VMInfo", "worker count": 1}
+2021-06-30T16:35:05.751+0100	INFO	controller-runtime.manager.controller.nodeinfo	Starting Controller	{"reconciler group": "[topology.vkubeviewer.com](http://topology.vkubeviewer.com/)", "reconciler kind": "NodeInfo"}
+2021-06-30T16:35:05.751+0100	INFO	controller-runtime.manager.controller.nodeinfo	Starting workers	{"reconciler group": "[topology.vkubeviewer.com](http://topology.vkubeviewer.com/)", "reconciler kind": "NodeInfo", "worker count": 1}
 2021-06-30T16:35:05.751+0100	INFO	controller-runtime.manager.controller.hostinfo	Starting workers	{"reconciler group": "[topology.vkubeviewer.com](http://topology.vkubeviewer.com/)", "reconciler kind": "HostInfo", "worker count": 1}
 2021-06-30T16:35:05.751+0100	INFO	controller-runtime.manager.controller.fcdinfo	Starting Controller	{"reconciler group": "[topology.vkubeviewer.com](http://topology.vkubeviewer.com/)", "reconciler kind": "FCDInfo"}
 2021-06-30T16:35:05.752+0100	INFO	controller-runtime.manager.controller.fcdinfo	Starting workers	{"reconciler group": "[topology.vkubeviewer.com](http://topology.vkubeviewer.com/)", "reconciler kind": "FCDInfo", "worker count": 1}
-2021-06-30T16:35:05.752+0100	INFO	controllers.VMInfo	received reconcile request for "k8s-worker-1" (namespace: "default")	{"VMInfo": "default/k8s-worker-1"}
-2021-06-30T16:35:05.811+0100	INFO	controllers.VMInfo	received reconcile request for "k8s-worker-1" (namespace: "default")	{"VMInfo": "default/k8s-worker-1"}
+2021-06-30T16:35:05.752+0100	INFO	controllers.NodeInfo	received reconcile request for "k8s-worker-1" (namespace: "default")	{"NodeInfo": "default/k8s-worker-1"}
+2021-06-30T16:35:05.811+0100	INFO	controllers.NodeInfo	received reconcile request for "k8s-worker-1" (namespace: "default")	{"NodeInfo": "default/k8s-worker-1"}
 ```
 
 You can apply more CRDs from the samples folder for other resources. 
@@ -123,18 +123,18 @@ You can apply more CRDs from the samples folder for other resources.
 **Step 10** : We can run the below command to see the required fields in the status field of the CRD.
 
 ```
-kubectl get vminfo -o yaml
+kubectl get nodeinfo -o yaml
 ```
 
 Output:
 
 ```
 apiVersion: [topology.vkubeviewer.com/v1](http://topology.vkubeviewer.com/v1)
-kind: VMInfo
+kind: NodeInfo
 metadata:
 annotations:
 [kubectl.kubernetes.io/last-applied-configuration:](http://kubectl.kubernetes.io/last-applied-configuration:) |
-{"apiVersion":"[topology.vkubeviewer.com/v1","kind":"VMInfo","metadata":{"annotations":{},"name":"k8s-worker-1","namespace":"default"},"spec":{"nodename":"k8s-worker-01](http://topology.vkubeviewer.com/v1%22,%22kind%22:%22VMInfo%22,%22metadata%22:%7B%22annotations%22:%7B%7D,%22name%22:%22k8s-worker-1%22,%22namespace%22:%22default%22%7D,%22spec%22:%7B%22nodename%22:%22k8s-worker-01)"}}
+{"apiVersion":"[topology.vkubeviewer.com/v1","kind":"NodeInfo","metadata":{"annotations":{},"name":"k8s-worker-1","namespace":"default"},"spec":{"nodename":"k8s-worker-01](http://topology.vkubeviewer.com/v1%22,%22kind%22:%22NodeInfo%22,%22metadata%22:%7B%22annotations%22:%7B%7D,%22name%22:%22k8s-worker-1%22,%22namespace%22:%22default%22%7D,%22spec%22:%7B%22nodename%22:%22k8s-worker-01)"}}
 creationTimestamp: "2021-06-30T15:34:22Z"
 generation: 1
 name: k8s-worker-1
@@ -215,7 +215,7 @@ kustomize build config/samples | kubectl create -f -
 
 ```
 kubectl get hostinfo -o yaml
-kubectl get vminfo -o yaml
+kubectl get nodeinfo -o yaml
 kubectl get fcdinfo -o yaml
 ```
 

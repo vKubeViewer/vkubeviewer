@@ -151,7 +151,7 @@ func (r *DatastoreInfoReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 
 	// update the status
 	if err := r.Status().Update(ctx, dsinfo); err != nil {
-		log.Error(err, "unable to update VMInfo status")
+		log.Error(err, "unable to update Datastore status")
 		return ctrl.Result{}, err
 	}
 
