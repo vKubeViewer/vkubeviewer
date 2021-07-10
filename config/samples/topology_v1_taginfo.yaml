@@ -1,0 +1,7 @@
+apiVersion: topology.vkubeviewer.com/v1
+kind: TagInfo
+metadata:
+  name: taginfo-sample
+spec:
+  # Add fields here
+  foo: bar
