@@ -1,6 +1,6 @@
 # Quick Start guide
 
-## A guide to quickly use the vkubeviewer operator.
+## A guide to use the vkubeviewer operator.
 
 **Step 1 :** Install the necessary software dependencies:
 
