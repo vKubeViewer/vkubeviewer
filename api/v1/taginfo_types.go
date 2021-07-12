@@ -38,8 +38,11 @@ type TagInfoStatus struct {
 	// DatacenterList []string
 }
 
-//+kubebuilder:object:root=true
-//+kubebuilder:subresource:status
+// +kubebuilder:validation:Optional
+// +kubebuilder:resource:shortName={"tag"}
+// +kubebuilder:printcolumn:name="Nodename",type=string,JSONPath=`.spec.nodename`
+// +kubebuilder:object:root=true
+// +kubebuilder:subresource:status
 
 // TagInfo is the Schema for the taginfoes API
 type TagInfo struct {

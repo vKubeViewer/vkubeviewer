@@ -19,6 +19,8 @@ package controllers
 import (
 	"context"
 
+	"github.com/go-logr/logr"
+	"github.com/vmware/govmomi/vim25"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -30,6 +32,8 @@ import (
 // TagInfoReconciler reconciles a TagInfo object
 type TagInfoReconciler struct {
 	client.Client
+	VC     *vim25.Client
+	Log    logr.Logger
 	Scheme *runtime.Scheme
 }
 

@@ -236,6 +236,8 @@ func main() {
 	}
 	if err = (&controllers.TagInfoReconciler{
 		Client: mgr.GetClient(),
+		VC:     c1,
+		Log:    ctrl.Log.WithName("controllers").WithName("TagInfo"),
 		Scheme: mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "TagInfo")

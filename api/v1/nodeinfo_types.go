@@ -47,7 +47,7 @@ type NodeInfoStatus struct {
 }
 
 // +kubebuilder:validation:Optional
-// +kubebuilder:resource:shortName={"ch"}
+// +kubebuilder:resource:shortName={"nd"}
 // +kubebuilder:printcolumn:name="Nodename",type=string,JSONPath=`.spec.nodename`
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
