@@ -12,7 +12,7 @@
 - Access to a Container Image Repository (docker.io, quay.io, harbor)
 - Make binary  → `sudo apt install make`
 
-**Step: 1.1:** Run the go-pack.sh script to get required go packages
+**Step: 1.1:** Run the below script to get required go and govmomi packages
 
 ```
 ./ go-pack.sh
@@ -263,6 +263,8 @@ Remove the deployment and related namespace and secret
 make undeploy
 ```
 
+
+### If you face any problems, please open a new issue in the Issues tab for us to review.
+
 ## Thank you.
 
-### If you face any issue please reach out to us.
