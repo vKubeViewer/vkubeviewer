@@ -14,7 +14,7 @@ spec:
     listKind: NodeInfoList
     plural: nodeinfoes
     shortNames:
-    - ch
+    - nd
     singular: nodeinfo
   scope: Namespaced
   versions:
@@ -48,17 +48,21 @@ spec:
           status:
             description: NodeInfoStatus defines the observed state of NodeInfo
             properties:
+              acttached_tag:
+                items:
+                  type: string
+                type: array
               net_name:
                 type: string
               net_overall_status:
                 type: string
-              path_to_vm:
+              net_switch_type:
                 type: string
-              switch_type:
-                type: string
-              vlan_id:
+              net_vlan_id:
                 format: int32
                 type: integer
+              path_to_vm:
+                type: string
               vm_guest_id:
                 type: string
               vm_hw_version:
