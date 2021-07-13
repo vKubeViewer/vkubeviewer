@@ -30,20 +30,21 @@ type NodeInfoSpec struct {
 
 // NodeInfoStatus defines the observed state of NodeInfo
 type NodeInfoStatus struct {
-	VMGuestId    string `json:"vm_guest_id,omitempty"`
-	VMTotalCPU   int64  `json:"vm_total_cpu,omitempty"`
-	VMResvdCPU   int64  `json:"vm_resvd_cpu,omitempty"`
-	VMTotalMem   int64  `json:"vm_total_mem,omitempty"`
-	VMResvdMem   int64  `json:"vm_resvd_mem,omitempty"`
-	VMPowerState string `json:"vm_power_state,omitempty"`
-	VMHwVersion  string `json:"vm_hw_version,omitempty"`
-	VMIpAddress  string `json:"vm_ip_address,omitempty"`
-	PathToVM     string `json:"path_to_vm,omitempty"`
+	ActtachedTag []string `json:"acttached_tag,omitempty"`
+	VMGuestId    string   `json:"vm_guest_id,omitempty"`
+	VMTotalCPU   int64    `json:"vm_total_cpu,omitempty"`
+	VMResvdCPU   int64    `json:"vm_resvd_cpu,omitempty"`
+	VMTotalMem   int64    `json:"vm_total_mem,omitempty"`
+	VMResvdMem   int64    `json:"vm_resvd_mem,omitempty"`
+	VMPowerState string   `json:"vm_power_state,omitempty"`
+	VMHwVersion  string   `json:"vm_hw_version,omitempty"`
+	VMIpAddress  string   `json:"vm_ip_address,omitempty"`
+	PathToVM     string   `json:"path_to_vm,omitempty"`
 
 	NetName          string `json:"net_name,omitempty"`
 	NetOverallStatus string `json:"net_overall_status,omitempty"`
-	VlanId           int32  `json:"vlan_id,omitempty"`
-	SwitchType       string `json:"switch_type,omitempty"`
+	NetSwitchType    string `json:"net_switch_type,omitempty"`
+	NetVlanId        int32  `json:"net_vlan_id,omitempty"`
 }
 
 // +kubebuilder:validation:Optional

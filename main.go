@@ -213,10 +213,11 @@ func main() {
 	}
 
 	if err = (&controllers.NodeInfoReconciler{
-		Client: mgr.GetClient(),
-		VC:     vim25client,
-		Log:    ctrl.Log.WithName("controllers").WithName("NodeInfo"),
-		Scheme: mgr.GetScheme(),
+		Client:   mgr.GetClient(),
+		VC_vim25: vim25client,
+		VC_rest:  restclient,
+		Log:      ctrl.Log.WithName("controllers").WithName("NodeInfo"),
+		Scheme:   mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "NodeInfo")
 		os.Exit(1)

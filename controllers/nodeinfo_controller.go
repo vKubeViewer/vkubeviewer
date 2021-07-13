@@ -23,6 +23,8 @@ import (
 
 	"github.com/go-logr/logr"
 	"github.com/vmware/govmomi/property"
+	"github.com/vmware/govmomi/vapi/rest"
+	"github.com/vmware/govmomi/vapi/tags"
 	"github.com/vmware/govmomi/view"
 	"github.com/vmware/govmomi/vim25"
 	"github.com/vmware/govmomi/vim25/mo"
@@ -38,9 +40,10 @@ import (
 // NodeInfoReconciler reconciles a NodeInfo object
 type NodeInfoReconciler struct {
 	client.Client
-	VC     *vim25.Client
-	Log    logr.Logger
-	Scheme *runtime.Scheme
+	VC_vim25 *vim25.Client
+	VC_rest  *rest.Client
+	Log      logr.Logger
+	Scheme   *runtime.Scheme
 }
 
 //+kubebuilder:rbac:groups=topology.vkubeviewer.com,resources=nodeinfoes,verbs=get;list;watch;create;update;patch;delete
@@ -84,11 +87,11 @@ func (r *NodeInfoReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 	// ------------
 
 	// Create a view manager
-	m := view.NewManager(r.VC)
+	m := view.NewManager(r.VC_vim25)
 
 	// Create a container view of VirtualMachine objects
 	// vvm - viewer of virtual machine
-	vvm, err := m.CreateContainerView(ctx, r.VC.ServiceContent.RootFolder, []string{"VirtualMachine"}, true)
+	vvm, err := m.CreateContainerView(ctx, r.VC_vim25.ServiceContent.RootFolder, []string{"VirtualMachine"}, true)
 
 	if err != nil {
 		msg := fmt.Sprintf("unable to create container view for VirtualMachines: error %s", err)
@@ -110,6 +113,8 @@ func (r *NodeInfoReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 		return ctrl.Result{}, err
 	}
 
+	tm := tags.NewManager(r.VC_rest)
+
 	//
 	// Print summary for host in NodeInfo specification info
 	//
@@ -118,6 +123,16 @@ func (r *NodeInfoReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 	for _, vm := range vms {
 		// if the VM's name equals to Nodename
 		if vm.Summary.Config.Name == node.Spec.Nodename {
+			tags, _ := tm.GetAttachedTags(ctx, vm.Self)
+			var curTags []string
+
+			for _, tag := range tags {
+				curTags = append(curTags, tag.Name)
+			}
+
+			if !ArrayEqual(curTags, node.Status.ActtachedTag) {
+				node.Status.ActtachedTag = curTags
+			}
 
 			// store VM information
 			node.Status.VMGuestId = string(vm.Summary.Guest.GuestId)
@@ -132,13 +147,14 @@ func (r *NodeInfoReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 
 			// traverse the network, in our operator, we consider only single network
 			for _, ref := range vm.Network {
+
 				if ref.Type == "Network" {
 					// if it's a normal Network, define the n as DistributedVirtualPortgroup mo.Network
 					var n mo.Network
-					node.Status.SwitchType = "Standard"
+					node.Status.NetSwitchType = "Standard"
 
 					// a property collector to retrieve objects by MOR
-					pc := property.DefaultCollector(r.VC)
+					pc := property.DefaultCollector(r.VC_vim25)
 					err = pc.Retrieve(ctx, vm.Network, nil, &n)
 					if err != nil {
 						msg = fmt.Sprintf("unable to retrieve VM Network: error %s", err)
@@ -152,10 +168,10 @@ func (r *NodeInfoReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 				} else if ref.Type == "DistributedVirtualPortgroup" {
 					// if it's a distributed network, define the n as mo.DistributedVirtualPortgroup
 					var pg mo.DistributedVirtualPortgroup
-					node.Status.SwitchType = "Distributed"
+					node.Status.NetSwitchType = "Distributed"
 
 					// a property collector to retrieve objects by MOR
-					pc := property.DefaultCollector(r.VC)
+					pc := property.DefaultCollector(r.VC_vim25)
 					err = pc.Retrieve(ctx, vm.Network, nil, &pg)
 					if err != nil {
 						msg = fmt.Sprintf("unable to retrieve VM DVPortGroup: error %s", err)
@@ -170,7 +186,7 @@ func (r *NodeInfoReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 					// get vlanID
 					portConfig := pg.Config.DefaultPortConfig.(*types.VMwareDVSPortSetting)
 					vlan := portConfig.Vlan.(*types.VmwareDistributedVirtualSwitchVlanIdSpec)
-					node.Status.VlanId = vlan.VlanId
+					node.Status.NetVlanId = vlan.VlanId
 
 				}
 			}
