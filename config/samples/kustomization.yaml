@@ -4,3 +4,4 @@ resources:
 - topology_v1_nodeinfo.yaml
 - topology_v1_nodeinfo2.yaml
 - topology_v1_datastoreinfo.yaml
+- topology_v1_taginfo.yaml

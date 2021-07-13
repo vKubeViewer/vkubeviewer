@@ -110,3 +110,29 @@ rules:
   - get
   - patch
   - update
+- apiGroups:
+  - topology.vkubeviewer.com
+  resources:
+  - taginfoes
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - topology.vkubeviewer.com
+  resources:
+  - taginfoes/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - topology.vkubeviewer.com
+  resources:
+  - taginfoes/status
+  verbs:
+  - get
+  - patch
+  - update

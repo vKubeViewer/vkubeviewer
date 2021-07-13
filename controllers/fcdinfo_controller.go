@@ -40,11 +40,11 @@ import (
 // FCDInfoReconciler reconciles a FCDInfo object
 type FCDInfoReconciler struct {
 	client.Client
-	VC1    *vim25.Client
-	VC2    *govmomi.Client
-	Finder *find.Finder
-	Log    logr.Logger
-	Scheme *runtime.Scheme
+	VC_vim25   *vim25.Client
+	VC_govmomi *govmomi.Client
+	Finder     *find.Finder
+	Log        logr.Logger
+	Scheme     *runtime.Scheme
 }
 
 //+kubebuilder:rbac:groups=topology.vkubeviewer.com,resources=fcdinfoes,verbs=get;list;watch;create;update;patch;delete
@@ -99,7 +99,7 @@ func (r *FCDInfoReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		msg := fmt.Sprintf("FCDInfo: Number of datastores found - %v", len(dss))
 		log.Info(msg)
 
-		pc := property.DefaultCollector(r.VC2.Client)
+		pc := property.DefaultCollector(r.VC_govmomi.Client)
 		//
 		// "finder" only lists - to get really detailed info,
 		// Convert datastores into list of references
@@ -119,7 +119,7 @@ func (r *FCDInfoReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 			return ctrl.Result{}, err
 		}
 
-		m := vslm.NewObjectManager(r.VC1)
+		m := vslm.NewObjectManager(r.VC_vim25)
 
 		//
 		// -- Display the FCDs on each datastore (held in array dst)

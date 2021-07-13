@@ -30,17 +30,19 @@ type TagInfoSpec struct {
 
 // TagInfoStatus defines the observed state of TagInfo
 type TagInfoStatus struct {
-	HostList      []string `json:"host_list,omitempty"`
-	VMList        []string `json:"vm_list,omitempty"`
-	DatastoreList []string `json:"datastore_list,omitempty"`
-	NetworkList   []string `json:"network_list,omitempty"`
-	ClusterList   []string `json:"cluster_list,omitempty"`
+	DatacenterList []string `json:"datacenter_list,omitempty"`
+	ClusterList    []string `json:"cluster_list,omitempty"`
+	HostList       []string `json:"host_list,omitempty"`
+	VMList         []string `json:"vm_list,omitempty"`
+	// DatastoreList []string `json:"datastore_list,omitempty"`
+	// NetworkList   []string `json:"network_list,omitempty"`
+
 	// DatacenterList []string
 }
 
 // +kubebuilder:validation:Optional
 // +kubebuilder:resource:shortName={"tag"}
-// +kubebuilder:printcolumn:name="Nodename",type=string,JSONPath=`.spec.nodename`
+// +kubebuilder:printcolumn:name="Tagname",type=string,JSONPath=`.spec.tagname`
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 

@@ -6,26 +6,26 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.4.1
   creationTimestamp: null
-  name: nodeinfoes.topology.vkubeviewer.com
+  name: taginfoes.topology.vkubeviewer.com
 spec:
   group: topology.vkubeviewer.com
   names:
-    kind: NodeInfo
-    listKind: NodeInfoList
-    plural: nodeinfoes
+    kind: TagInfo
+    listKind: TagInfoList
+    plural: taginfoes
     shortNames:
-    - ch
-    singular: nodeinfo
+    - tag
+    singular: taginfo
   scope: Namespaced
   versions:
   - additionalPrinterColumns:
-    - jsonPath: .spec.nodename
-      name: Nodename
+    - jsonPath: .spec.tagname
+      name: Tagname
       type: string
     name: v1
     schema:
       openAPIV3Schema:
-        description: NodeInfo is the Schema for the nodeinfoes API
+        description: TagInfo is the Schema for the taginfoes API
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation
@@ -40,45 +40,30 @@ spec:
           metadata:
             type: object
           spec:
-            description: NodeInfoSpec defines the desired state of NodeInfo
+            description: TagInfoSpec defines the desired state of TagInfo
             properties:
-              nodename:
+              tagname:
                 type: string
             type: object
           status:
-            description: NodeInfoStatus defines the observed state of NodeInfo
+            description: TagInfoStatus defines the observed state of TagInfo
             properties:
-              net_name:
-                type: string
-              net_overall_status:
-                type: string
-              path_to_vm:
-                type: string
-              switch_type:
-                type: string
-              vlan_id:
-                format: int32
-                type: integer
-              vm_guest_id:
-                type: string
-              vm_hw_version:
-                type: string
-              vm_ip_address:
-                type: string
-              vm_power_state:
-                type: string
-              vm_resvd_cpu:
-                format: int64
-                type: integer
-              vm_resvd_mem:
-                format: int64
-                type: integer
-              vm_total_cpu:
-                format: int64
-                type: integer
-              vm_total_mem:
-                format: int64
-                type: integer
+              cluster_list:
+                items:
+                  type: string
+                type: array
+              datacenter_list:
+                items:
+                  type: string
+                type: array
+              host_list:
+                items:
+                  type: string
+                type: array
+              vm_list:
+                items:
+                  type: string
+                type: array
             type: object
         type: object
     served: true

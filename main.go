@@ -27,6 +27,7 @@ import (
 	"github.com/vmware/govmomi"
 	"github.com/vmware/govmomi/find"
 	"github.com/vmware/govmomi/session/cache"
+	"github.com/vmware/govmomi/vapi/rest"
 	"github.com/vmware/govmomi/vim25"
 	"github.com/vmware/govmomi/vim25/soap"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
@@ -58,7 +59,7 @@ func init() {
 // - vSphere session login function
 //
 
-func vlogin(ctx context.Context, vc, user, pwd string) (*vim25.Client, *govmomi.Client, error) {
+func vlogin(ctx context.Context, vc, user, pwd string) (*vim25.Client, *govmomi.Client, *rest.Client, error) {
 
 	//
 	// This section allows for insecure govmomi logins
@@ -102,26 +103,33 @@ func vlogin(ctx context.Context, vc, user, pwd string) (*vim25.Client, *govmomi.
 	//
 	// Create new client
 	//
-	c1 := new(vim25.Client)
+	vim25client := new(vim25.Client)
 
 	//
 	// Login using client c and cache s
 	//
-	err = s.Login(ctx, c1, nil)
+	err = s.Login(ctx, vim25client, nil)
 
 	if err != nil {
-		setupLog.Error(err, "FCDInfo: vim25 login not successful", "controller", "NodeInfo")
+		setupLog.Error(err, "Vkubeviewer: vim25 login not successful", "manager", "Vkubeviewer")
 		os.Exit(1)
 	}
 
-	c2, err := govmomi.NewClient(ctx, u, insecure)
+	govmomiclient, err := govmomi.NewClient(ctx, u, insecure)
 
 	if err != nil {
-		setupLog.Error(err, "FCDInfo: gomvomi login not successful", "controller", "NodeInfo")
+		setupLog.Error(err, "Vkubeviewer: gomvomi login not successful", "manager", "Vkubeviewer")
 		os.Exit(1)
 	}
 
-	return c1, c2, nil
+	restclient := rest.NewClient(govmomiclient.Client)
+	err = restclient.Login(ctx, u.User)
+
+	if err != nil {
+		setupLog.Error(err, "Vkubeviewer: rest login not successful", "controller", "Vkubeviewer")
+		os.Exit(1)
+	}
+	return vim25client, govmomiclient, restclient, nil
 }
 
 func main() {
@@ -170,13 +178,13 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	c1, c2, err := vlogin(ctx, vc, user, pwd)
+	vim25client, govmomiclient, restclient, err := vlogin(ctx, vc, user, pwd)
 	if err != nil {
 		setupLog.Error(err, "unable to get login session to vSphere")
 		os.Exit(1)
 	}
 
-	finder := find.NewFinder(c2.Client, true)
+	finder := find.NewFinder(govmomiclient.Client, true)
 
 	//
 	// -- find and set the default datacenter
@@ -193,12 +201,12 @@ func main() {
 	//Modified Reconcile call
 	//----
 	if err = (&controllers.FCDInfoReconciler{
-		Client: mgr.GetClient(),
-		VC1:    c1,
-		VC2:    c2,
-		Finder: finder,
-		Log:    ctrl.Log.WithName("controllers").WithName("FCDInfo"),
-		Scheme: mgr.GetScheme(),
+		Client:     mgr.GetClient(),
+		VC_vim25:   vim25client,
+		VC_govmomi: govmomiclient,
+		Finder:     finder,
+		Log:        ctrl.Log.WithName("controllers").WithName("FCDInfo"),
+		Scheme:     mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "FCDInfo")
 		os.Exit(1)
@@ -206,7 +214,7 @@ func main() {
 
 	if err = (&controllers.NodeInfoReconciler{
 		Client: mgr.GetClient(),
-		VC:     c1,
+		VC:     vim25client,
 		Log:    ctrl.Log.WithName("controllers").WithName("NodeInfo"),
 		Scheme: mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
@@ -216,7 +224,7 @@ func main() {
 
 	if err = (&controllers.HostInfoReconciler{
 		Client: mgr.GetClient(),
-		VC:     c1,
+		VC:     vim25client,
 		Log:    ctrl.Log.WithName("controllers").WithName("HostInfo"),
 		Scheme: mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
@@ -227,7 +235,7 @@ func main() {
 
 	if err = (&controllers.DatastoreInfoReconciler{
 		Client: mgr.GetClient(),
-		VC:     c1,
+		VC:     vim25client,
 		Log:    ctrl.Log.WithName("controllers").WithName("DatastoreInfo"),
 		Scheme: mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
@@ -235,10 +243,11 @@ func main() {
 		os.Exit(1)
 	}
 	if err = (&controllers.TagInfoReconciler{
-		Client: mgr.GetClient(),
-		VC:     c1,
-		Log:    ctrl.Log.WithName("controllers").WithName("TagInfo"),
-		Scheme: mgr.GetScheme(),
+		Client:   mgr.GetClient(),
+		VC_vim25: vim25client,
+		VC_rest:  restclient,
+		Log:      ctrl.Log.WithName("controllers").WithName("TagInfo"),
+		Scheme:   mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "TagInfo")
 		os.Exit(1)

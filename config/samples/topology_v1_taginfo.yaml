@@ -4,4 +4,4 @@ metadata:
   name: taginfo-sample
 spec:
   # Add fields here
-  foo: bar
+  tagname: zone-a

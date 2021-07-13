@@ -18,13 +18,20 @@ package controllers
 
 import (
 	"context"
+	"fmt"
+	"time"
 
 	"github.com/go-logr/logr"
+	"github.com/vmware/govmomi/property"
+	"github.com/vmware/govmomi/vapi/rest"
+	"github.com/vmware/govmomi/vapi/tags"
 	"github.com/vmware/govmomi/vim25"
+	"github.com/vmware/govmomi/vim25/mo"
+	"github.com/vmware/govmomi/vim25/types"
+	k8serr "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	topologyv1 "vkubeviewer/api/v1"
 )
@@ -32,9 +39,10 @@ import (
 // TagInfoReconciler reconciles a TagInfo object
 type TagInfoReconciler struct {
 	client.Client
-	VC     *vim25.Client
-	Log    logr.Logger
-	Scheme *runtime.Scheme
+	VC_vim25 *vim25.Client
+	VC_rest  *rest.Client
+	Log      logr.Logger
+	Scheme   *runtime.Scheme
 }
 
 //+kubebuilder:rbac:groups=topology.vkubeviewer.com,resources=taginfoes,verbs=get;list;watch;create;update;patch;delete
@@ -51,11 +59,100 @@ type TagInfoReconciler struct {
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.8.3/pkg/reconcile
 func (r *TagInfoReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	_ = log.FromContext(ctx)
+	ctx = context.Background()
 
-	// your logic here
+	// ------------
+	// Log Session
+	// ------------
+	log := r.Log.WithValues("TagInfo", req.NamespacedName)
+	taginfo := &topologyv1.TagInfo{}
 
-	return ctrl.Result{}, nil
+	// Log Output for failure
+	if err := r.Client.Get(ctx, req.NamespacedName, taginfo); err != nil {
+		if !k8serr.IsNotFound(err) {
+			log.Error(err, "unable to fecth TagInfo")
+		}
+		return ctrl.Result{}, client.IgnoreNotFound(err)
+	}
+
+	// Log Output for sucess
+	msg := fmt.Sprintf("received reconcile request for %q (namespace : %q)", taginfo.GetName(), taginfo.GetNamespace())
+	log.Info(msg)
+
+	// ------------
+	// Retrieve Session
+	// ------------
+
+	tm := tags.NewManager(r.VC_rest)
+	tag, _ := tm.GetTag(ctx, taginfo.Spec.Tagname)
+	refmap := make(map[string][]types.ManagedObjectReference)
+	objs, _ := tm.ListAttachedObjects(ctx, tag.ID)
+	pc := property.DefaultCollector(r.VC_vim25)
+	for _, obj := range objs {
+		// fmt.Println(obj.Reference().Type, obj.Reference().Value)
+		refmap[obj.Reference().Type] = append(refmap[obj.Reference().Type], obj.Reference())
+	}
+	var curDatacenterList []string
+	var curClusterList []string
+	var curHostList []string
+	var curVMList []string
+
+	for key, element := range refmap {
+		switch key {
+
+		case "Datacenter":
+			var dcs []mo.Datacenter
+			_ = pc.Retrieve(ctx, element, []string{"name"}, &dcs)
+			for _, dc := range dcs {
+				curDatacenterList = append(curDatacenterList, dc.Name)
+			}
+			if !ArrayEqual(curDatacenterList, taginfo.Status.DatacenterList) {
+				taginfo.Status.DatacenterList = curDatacenterList
+			}
+
+		case "ClusterComputeResource":
+			var ccs []mo.ClusterComputeResource
+			_ = pc.Retrieve(ctx, element, []string{"name"}, &ccs)
+			for _, cc := range ccs {
+				curClusterList = append(curClusterList, cc.Name)
+			}
+			if !ArrayEqual(curClusterList, taginfo.Status.ClusterList) {
+				taginfo.Status.ClusterList = curClusterList
+			}
+		case "HostSystem":
+			var hss []mo.HostSystem
+			_ = pc.Retrieve(ctx, element, []string{"name"}, &hss)
+			// fmt.Println(hss)
+			for _, hs := range hss {
+				curHostList = append(curHostList, hs.Name)
+			}
+			if !ArrayEqual(curHostList, taginfo.Status.HostList) {
+				taginfo.Status.HostList = curHostList
+			}
+		case "VirtualMachine":
+			var vms []mo.VirtualMachine
+			_ = pc.Retrieve(ctx, element, []string{"name"}, &vms)
+			for _, vm := range vms {
+				curVMList = append(curVMList, vm.Name)
+			}
+			if !ArrayEqual(curVMList, taginfo.Status.VMList) {
+				taginfo.Status.VMList = curVMList
+			}
+		}
+	}
+	// ------------
+	// Update Session
+	// ------------
+
+	// update the status
+	if err := r.Status().Update(ctx, taginfo); err != nil {
+		log.Error(err, "unable to update TagInfo status")
+		return ctrl.Result{}, err
+	}
+
+	return ctrl.Result{
+		RequeueAfter: time.Duration(1) * time.Minute,
+	}, nil
 }
 
 // SetupWithManager sets up the controller with the Manager.
