@@ -19,6 +19,7 @@ package controllers
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/go-logr/logr"
@@ -29,12 +30,56 @@ import (
 	"github.com/vmware/govmomi/vim25/mo"
 	"github.com/vmware/govmomi/vim25/types"
 	k8serr "k8s.io/apimachinery/pkg/api/errors"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/tools/clientcmd"
+	"k8s.io/client-go/util/homedir"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	topologyv1 "vkubeviewer/api/v1"
 )
+
+var k8snode []string
+
+func ListK8sNodes() []string {
+	var curK8sNode []string
+	var kubeconfig *string
+	path := homedir.HomeDir() + "/.kube/config"
+	kubeconfig = &path
+	config, err := clientcmd.BuildConfigFromFlags("", *kubeconfig)
+
+	if err != nil {
+		panic(err)
+	}
+
+	clientSet, err := kubernetes.NewForConfig(config)
+	if err != nil {
+		panic(err)
+	}
+
+	nodeList := clientSet.CoreV1().Nodes()
+	nodes, err := nodeList.List(context.TODO(), v1.ListOptions{})
+
+	if err != nil {
+		fmt.Println("Error occurred: ", err)
+	}
+
+	for _, item := range nodes.Items {
+		curK8sNode = append(curK8sNode, item.ObjectMeta.Name)
+	}
+	return curK8sNode
+}
+
+func stringInSlice(s string, list []string) bool {
+	for _, ele := range list {
+		if s == ele {
+			return true
+		}
+	}
+	return false
+}
 
 // TagInfoReconciler reconciles a TagInfo object
 type TagInfoReconciler struct {
@@ -97,6 +142,8 @@ func (r *TagInfoReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 	var curHostList []string
 	var curVMList []string
 
+	k8snode = ListK8sNodes()
+
 	for key, element := range refmap {
 		switch key {
 
@@ -131,9 +178,22 @@ func (r *TagInfoReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 			}
 		case "VirtualMachine":
 			var vms []mo.VirtualMachine
-			_ = pc.Retrieve(ctx, element, []string{"name"}, &vms)
+			_ = pc.Retrieve(ctx, element, nil, &vms)
+
 			for _, vm := range vms {
-				curVMList = append(curVMList, vm.Name)
+				RPref := vm.ResourcePool
+				var resourcepool mo.ResourcePool
+				_ = pc.RetrieveOne(ctx, *RPref, nil, &resourcepool)
+				CCRref := resourcepool.Parent
+				var clustercomputeresource mo.ClusterComputeResource
+				_ = pc.RetrieveOne(ctx, *CCRref, nil, &clustercomputeresource)
+
+				if !stringInSlice(vm.Name, k8snode) {
+					curVMList = append(curVMList, vm.Name)
+				} else {
+					str := []string{"k8s", vm.Name, "[", clustercomputeresource.Name, "]"}
+					curVMList = append(curVMList, strings.Join(str, " "))
+				}
 			}
 			if !ArrayEqual(curVMList, taginfo.Status.VMList) {
 				taginfo.Status.VMList = curVMList
