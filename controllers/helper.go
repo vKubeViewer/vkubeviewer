@@ -44,17 +44,19 @@ func ByteCountIEC(b int64) string {
 		float64(b)/float64(div), "KMGTPE"[exp])
 }
 
-// ArrayEqual checks two Arrays are the same or not
-func ArrayEqual(first, second []string) bool {
+// UpdateStatus checks two arrays are the same or not,
+// if they are different, return the second array
+func UpdateStatus(first, second []string) []string {
 	if len(first) != len(second) {
-		return false
+		return second
 	}
 	for i, v := range first {
 		if second[i] != v {
-			return false
+			return second
 		}
 	}
-	return true
+	return first
+
 }
 
 // ListK8sNodes connects with k8s api and get the list of nodes

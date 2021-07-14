@@ -203,18 +203,10 @@ func (r *TagInfoReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		}
 	}
 	// if current Lists are different from the one stored in status, replace them
-	if !ArrayEqual(curDatacenterList, taginfo.Status.DatacenterList) {
-		taginfo.Status.DatacenterList = curDatacenterList
-	}
-	if !ArrayEqual(curClusterList, taginfo.Status.ClusterList) {
-		taginfo.Status.ClusterList = curClusterList
-	}
-	if !ArrayEqual(curHostList, taginfo.Status.HostList) {
-		taginfo.Status.HostList = curHostList
-	}
-	if !ArrayEqual(curVMList, taginfo.Status.VMList) {
-		taginfo.Status.VMList = curVMList
-	}
+	taginfo.Status.DatacenterList = UpdateStatus(curDatacenterList, taginfo.Status.DatacenterList)
+	taginfo.Status.ClusterList = UpdateStatus(curClusterList, taginfo.Status.ClusterList)
+	taginfo.Status.HostList = UpdateStatus(curHostList, taginfo.Status.HostList)
+	taginfo.Status.VMList = UpdateStatus(curVMList, taginfo.Status.VMList)
 	// ------------
 	// Update Session
 	// ------------
