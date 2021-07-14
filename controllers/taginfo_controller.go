@@ -30,56 +30,12 @@ import (
 	"github.com/vmware/govmomi/vim25/mo"
 	"github.com/vmware/govmomi/vim25/types"
 	k8serr "k8s.io/apimachinery/pkg/api/errors"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/tools/clientcmd"
-	"k8s.io/client-go/util/homedir"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	topologyv1 "vkubeviewer/api/v1"
 )
-
-var k8snode []string
-
-func ListK8sNodes() []string {
-	var curK8sNode []string
-	var kubeconfig *string
-	path := homedir.HomeDir() + "/.kube/config"
-	kubeconfig = &path
-	config, err := clientcmd.BuildConfigFromFlags("", *kubeconfig)
-
-	if err != nil {
-		panic(err)
-	}
-
-	clientSet, err := kubernetes.NewForConfig(config)
-	if err != nil {
-		panic(err)
-	}
-
-	nodeList := clientSet.CoreV1().Nodes()
-	nodes, err := nodeList.List(context.TODO(), v1.ListOptions{})
-
-	if err != nil {
-		fmt.Println("Error occurred: ", err)
-	}
-
-	for _, item := range nodes.Items {
-		curK8sNode = append(curK8sNode, item.ObjectMeta.Name)
-	}
-	return curK8sNode
-}
-
-func stringInSlice(s string, list []string) bool {
-	for _, ele := range list {
-		if s == ele {
-			return true
-		}
-	}
-	return false
-}
 
 // TagInfoReconciler reconciles a TagInfo object
 type TagInfoReconciler struct {
@@ -128,77 +84,136 @@ func (r *TagInfoReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 	// Retrieve Session
 	// ------------
 
+	// tags.NewManager creates a new Manager instance with the rest.Client to retrieve tags information
 	tm := tags.NewManager(r.VC_rest)
-	tag, _ := tm.GetTag(ctx, taginfo.Spec.Tagname)
-	refmap := make(map[string][]types.ManagedObjectReference)
-	objs, _ := tm.ListAttachedObjects(ctx, tag.ID)
+
+	// get type tags.Tag with Tagname
+	tag, err := tm.GetTag(ctx, taginfo.Spec.Tagname)
+	if err != nil {
+		msg := fmt.Sprintf("unable to get tags.Tag based on the %s : error %s", taginfo.Spec.Tagname, err)
+		log.Info(msg)
+		return ctrl.Result{}, err
+	}
+
+	// list ListAttachedObjects with tag.ID
+	objs, err := tm.ListAttachedObjects(ctx, tag.ID)
+	if err != nil {
+		msg := fmt.Sprintf("unable to list attachedobjects on the tag %s : error %s", taginfo.Spec.Tagname, err)
+		log.Info(msg)
+		return ctrl.Result{}, err
+	}
+
+	// retrieve the managedobjects with managedobjectreference by property's Retrieve
 	pc := property.DefaultCollector(r.VC_vim25)
+
+	// refmap stores the managedobjectreference based on the managedobject type
+	refmap := make(map[string][]types.ManagedObjectReference)
 	for _, obj := range objs {
-		// fmt.Println(obj.Reference().Type, obj.Reference().Value)
 		refmap[obj.Reference().Type] = append(refmap[obj.Reference().Type], obj.Reference())
 	}
+
+	// define current ManagedObjects list
 	var curDatacenterList []string
 	var curClusterList []string
 	var curHostList []string
 	var curVMList []string
+	// store the node list via k8s api
+	var k8snode = ListK8sNodes()
 
-	k8snode = ListK8sNodes()
-
+	// traverse refmap, according its type, retrieve the managedobject and append the name to the ManagedObjects list
 	for key, element := range refmap {
 		switch key {
-
 		case "Datacenter":
 			var dcs []mo.Datacenter
-			_ = pc.Retrieve(ctx, element, []string{"name"}, &dcs)
+			err = pc.Retrieve(ctx, element, []string{"name"}, &dcs)
+			if err != nil {
+				msg := fmt.Sprintf("unable to retrieve information of %s : error %s", key, err)
+				log.Info(msg)
+				return ctrl.Result{}, err
+			}
+			// store name into list
 			for _, dc := range dcs {
 				curDatacenterList = append(curDatacenterList, dc.Name)
 			}
-			if !ArrayEqual(curDatacenterList, taginfo.Status.DatacenterList) {
-				taginfo.Status.DatacenterList = curDatacenterList
-			}
-
 		case "ClusterComputeResource":
 			var ccs []mo.ClusterComputeResource
-			_ = pc.Retrieve(ctx, element, []string{"name"}, &ccs)
+			err = pc.Retrieve(ctx, element, []string{"name"}, &ccs)
+			if err != nil {
+				msg := fmt.Sprintf("unable to retrieve information of %s : error %s", key, err)
+				log.Info(msg)
+				return ctrl.Result{}, err
+			}
 			for _, cc := range ccs {
 				curClusterList = append(curClusterList, cc.Name)
 			}
-			if !ArrayEqual(curClusterList, taginfo.Status.ClusterList) {
-				taginfo.Status.ClusterList = curClusterList
-			}
 		case "HostSystem":
 			var hss []mo.HostSystem
-			_ = pc.Retrieve(ctx, element, []string{"name"}, &hss)
-			// fmt.Println(hss)
+			err = pc.Retrieve(ctx, element, []string{"name"}, &hss)
+			if err != nil {
+				msg := fmt.Sprintf("unable to retrieve information of %s : error %s", key, err)
+				log.Info(msg)
+				return ctrl.Result{}, err
+			}
 			for _, hs := range hss {
 				curHostList = append(curHostList, hs.Name)
 			}
-			if !ArrayEqual(curHostList, taginfo.Status.HostList) {
-				taginfo.Status.HostList = curHostList
-			}
+
 		case "VirtualMachine":
 			var vms []mo.VirtualMachine
-			_ = pc.Retrieve(ctx, element, nil, &vms)
+			err = pc.Retrieve(ctx, element, nil, &vms)
+			if err != nil {
+				msg := fmt.Sprintf("unable to retrieve information of %s : error %s", key, err)
+				log.Info(msg)
+				return ctrl.Result{}, err
+			}
 
+			// traverse virtual machines
 			for _, vm := range vms {
+				// RPref - resourcePool Reference
 				RPref := vm.ResourcePool
 				var resourcepool mo.ResourcePool
-				_ = pc.RetrieveOne(ctx, *RPref, nil, &resourcepool)
+				err = pc.RetrieveOne(ctx, *RPref, nil, &resourcepool)
+				if err != nil {
+					msg := fmt.Sprintf("unable to retrieve ResourcePool MO of %s : error %s", RPref.Value, err)
+					log.Info(msg)
+					return ctrl.Result{}, err
+				}
+
+				// RPref - ClusterComputeResource Reference
 				CCRref := resourcepool.Parent
 				var clustercomputeresource mo.ClusterComputeResource
-				_ = pc.RetrieveOne(ctx, *CCRref, nil, &clustercomputeresource)
+				err = pc.RetrieveOne(ctx, *CCRref, nil, &clustercomputeresource)
+				if err != nil {
+					msg := fmt.Sprintf("unable to retrieve ClusterComputeResource MO of %s : error %s", CCRref.Value, err)
+					log.Info(msg)
+					return ctrl.Result{}, err
+				}
 
+				// check whether virtual machine is a k8s node or not
 				if !stringInSlice(vm.Name, k8snode) {
-					curVMList = append(curVMList, vm.Name)
+					str := []string{vm.Name, "[", clustercomputeresource.Name, "]"}
+					curVMList = append(curVMList, strings.Join(str, " "))
 				} else {
+					// if the vm is a k8s node, add marker "k8s"
 					str := []string{"k8s", vm.Name, "[", clustercomputeresource.Name, "]"}
 					curVMList = append(curVMList, strings.Join(str, " "))
 				}
 			}
-			if !ArrayEqual(curVMList, taginfo.Status.VMList) {
-				taginfo.Status.VMList = curVMList
-			}
+
 		}
+	}
+	// if current Lists are different from the one stored in status, replace them
+	if !ArrayEqual(curDatacenterList, taginfo.Status.DatacenterList) {
+		taginfo.Status.DatacenterList = curDatacenterList
+	}
+	if !ArrayEqual(curClusterList, taginfo.Status.ClusterList) {
+		taginfo.Status.ClusterList = curClusterList
+	}
+	if !ArrayEqual(curHostList, taginfo.Status.HostList) {
+		taginfo.Status.HostList = curHostList
+	}
+	if !ArrayEqual(curVMList, taginfo.Status.VMList) {
+		taginfo.Status.VMList = curVMList
 	}
 	// ------------
 	// Update Session

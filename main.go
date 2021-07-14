@@ -24,7 +24,7 @@ import (
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
 	// to ensure that exec-entrypoint and run can make use of them.
-	"github.com/vmware/govmomi"
+
 	"github.com/vmware/govmomi/find"
 	"github.com/vmware/govmomi/session/cache"
 	"github.com/vmware/govmomi/vapi/rest"
@@ -56,25 +56,19 @@ func init() {
 	//+kubebuilder:scaffold:scheme
 }
 
-// - vSphere session login function
-//
+// vlogin logins with vSphere with two Clients we use in the operator
+// vim25.Client, the most usable one, connects SOAP service
+// rest.Client extends soap.Client to support JSON encoding
+func vlogin(ctx context.Context, vc, user, pwd string) (*vim25.Client, *rest.Client, error) {
 
-func vlogin(ctx context.Context, vc, user, pwd string) (*vim25.Client, *govmomi.Client, *rest.Client, error) {
-
-	//
 	// This section allows for insecure govmomi logins
-	//
-
 	var insecure bool
 	flag.BoolVar(&insecure, "insecure", true, "ignore any vCenter TLS cert validation error")
 
-	//
 	// Create a vSphere/vCenter client
-	//
 	// The govmomi client requires a URL object, u.
 	// You cannot use a string representation of the vCenter URL.
 	// soap.ParseURL provides the correct object format.
-	//
 
 	u, err := soap.ParseURL(vc)
 
@@ -90,24 +84,16 @@ func vlogin(ctx context.Context, vc, user, pwd string) (*vim25.Client, *govmomi.
 
 	u.User = url.UserPassword(user, pwd)
 
-	//
 	// Session cache example taken from https://github.com/vmware/govmomi/blob/master/examples/examples.go
-	//
 	// Share govc's session cache
-	//
 	s := &cache.Session{
 		URL:      u,
 		Insecure: true,
 	}
-
-	//
-	// Create new client
-	//
+	// Create new vim25 client
 	vim25client := new(vim25.Client)
 
-	//
-	// Login using client c and cache s
-	//
+	// Login using client vim25client and cache s
 	err = s.Login(ctx, vim25client, nil)
 
 	if err != nil {
@@ -115,21 +101,16 @@ func vlogin(ctx context.Context, vc, user, pwd string) (*vim25.Client, *govmomi.
 		os.Exit(1)
 	}
 
-	govmomiclient, err := govmomi.NewClient(ctx, u, insecure)
-
-	if err != nil {
-		setupLog.Error(err, "Vkubeviewer: gomvomi login not successful", "manager", "Vkubeviewer")
-		os.Exit(1)
-	}
-
-	restclient := rest.NewClient(govmomiclient.Client)
+	// Create new rest client
+	restclient := rest.NewClient(vim25client)
 	err = restclient.Login(ctx, u.User)
 
 	if err != nil {
 		setupLog.Error(err, "Vkubeviewer: rest login not successful", "controller", "Vkubeviewer")
 		os.Exit(1)
 	}
-	return vim25client, govmomiclient, restclient, nil
+
+	return vim25client, restclient, nil
 }
 
 func main() {
@@ -162,33 +143,26 @@ func main() {
 		os.Exit(1)
 	}
 
-	//
 	// Retrieve vCenter URL, username and password from environment variables
 	// These are provided via the manager manifest when controller is deployed
-	//
 
 	vc := os.Getenv("GOVMOMI_URL")
 	user := os.Getenv("GOVMOMI_USERNAME")
 	pwd := os.Getenv("GOVMOMI_PASSWORD")
 
-	//
 	// Create context, and get vSphere session information
-	//
-
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	vim25client, govmomiclient, restclient, err := vlogin(ctx, vc, user, pwd)
+	vim25client, restclient, err := vlogin(ctx, vc, user, pwd)
 	if err != nil {
 		setupLog.Error(err, "unable to get login session to vSphere")
 		os.Exit(1)
 	}
 
-	finder := find.NewFinder(govmomiclient.Client, true)
+	finder := find.NewFinder(vim25client, true)
 
-	//
-	// -- find and set the default datacenter
-	//
+	// find and set the default datacenter
 
 	dc, err := finder.DefaultDatacenter(ctx)
 
@@ -199,14 +173,12 @@ func main() {
 	}
 
 	//Modified Reconcile call
-	//----
 	if err = (&controllers.FCDInfoReconciler{
-		Client:     mgr.GetClient(),
-		VC_vim25:   vim25client,
-		VC_govmomi: govmomiclient,
-		Finder:     finder,
-		Log:        ctrl.Log.WithName("controllers").WithName("FCDInfo"),
-		Scheme:     mgr.GetScheme(),
+		Client: mgr.GetClient(),
+		VC:     vim25client,
+		Finder: finder,
+		Log:    ctrl.Log.WithName("controllers").WithName("FCDInfo"),
+		Scheme: mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "FCDInfo")
 		os.Exit(1)
@@ -232,7 +204,6 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "HostInfo")
 		os.Exit(1)
 	}
-	//-----
 
 	if err = (&controllers.DatastoreInfoReconciler{
 		Client: mgr.GetClient(),

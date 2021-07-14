@@ -56,6 +56,9 @@ type HostInfoReconciler struct {
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.8.3/pkg/reconcile
 func (r *HostInfoReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	ctx = context.Background()
+	// ------------
+	// Log Session
+	// ------------
 	log := r.Log.WithValues("hostinfo", req.NamespacedName)
 
 	hi := &topologyv1.HostInfo{}
@@ -71,15 +74,13 @@ func (r *HostInfoReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 	log.Info(msg)
 
 	//
-	// Create a view manager, using vCenter session detail passed to Reconciler
-	//
+	// Retrieve Session
+	// ------------
 
+	// Create a view manager, using vCenter session detail passed to Reconciler
 	m := view.NewManager(r.VC)
 
-	//
 	// Create a container view of HostSystem objects
-	//
-
 	v, err := m.CreateContainerView(ctx, r.VC.ServiceContent.RootFolder, []string{"HostSystem"}, true)
 
 	if err != nil {
@@ -90,12 +91,8 @@ func (r *HostInfoReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 
 	defer v.Destroy(ctx)
 
-	//
 	// Retrieve summary property for all hosts
-	//
-
 	var hss []mo.HostSystem
-
 	err = v.Retrieve(ctx, []string{"HostSystem"}, []string{"summary"}, &hss)
 
 	if err != nil {
@@ -105,10 +102,7 @@ func (r *HostInfoReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 			RequeueAfter: time.Duration(1) * time.Minute}, err
 	}
 
-	//
-	// Print summary for host in HostInfo specification info only
-	//
-
+	// iterate hostsystem and store the host information to HostInfo's status
 	for _, hs := range hss {
 		if hs.Summary.Config.Name == hi.Spec.Hostname {
 			hi.Status.TotalCPU = int64(hs.Summary.Hardware.CpuMhz) * int64(hs.Summary.Hardware.NumCpuCores)
@@ -116,10 +110,9 @@ func (r *HostInfoReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 		}
 	}
 
-	//
-	// Update the HostInfo status fields
-	//
-
+	// ------------
+	// Update Session
+	// ------------
 	if err := r.Status().Update(ctx, hi); err != nil {
 		log.Error(err, "unable to update HostInfo status")
 		return ctrl.Result{}, err

@@ -134,10 +134,11 @@ func (r *DatastoreInfoReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 					log.Info(msg)
 					return ctrl.Result{}, err
 				}
-				// append the Host's Name into Hosts List
+				// append the Host's Name into current Hosts List
 				curHostsMounted = append(curHostsMounted, h.Summary.Config.Name)
 			}
 
+			// if curHostsMounted is different from the one stored in status, replace it
 			if !ArrayEqual(curHostsMounted, dsinfo.Status.HostsMounted) {
 				dsinfo.Status.HostsMounted = curHostsMounted
 			}
@@ -165,32 +166,4 @@ func (r *DatastoreInfoReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&topologyv1.DatastoreInfo{}).
 		Complete(r)
-}
-
-// this brilliant code is from https://yourbasic.org/golang/formatting-byte-size-to-human-readable-format/
-// change it to 2 digts float
-func ByteCountIEC(b int64) string {
-	const unit = 1024
-	if b < unit {
-		return fmt.Sprintf("%d B", b)
-	}
-	div, exp := int64(unit), 0
-	for n := b / unit; n >= unit; n /= unit {
-		div *= unit
-		exp++
-	}
-	return fmt.Sprintf("%.2f %ciB",
-		float64(b)/float64(div), "KMGTPE"[exp])
-}
-
-func ArrayEqual(first, second []string) bool {
-	if len(first) != len(second) {
-		return false
-	}
-	for i, v := range first {
-		if second[i] != v {
-			return false
-		}
-	}
-	return true
 }

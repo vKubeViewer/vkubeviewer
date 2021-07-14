@@ -101,7 +101,7 @@ func (r *NodeInfoReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 
 	defer vvm.Destroy(ctx)
 
-	// Retrieve summary property for all VMs
+	// Retrieve all property for all VMs
 	// vms - VirtualMachines
 	var vms []mo.VirtualMachine
 
@@ -113,28 +113,31 @@ func (r *NodeInfoReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 		return ctrl.Result{}, err
 	}
 
+	// tags.NewManager creates a new Manager instance with the rest.Client to retrieve tags information
 	tm := tags.NewManager(r.VC_rest)
-
-	//
-	// Print summary for host in NodeInfo specification info
-	//
 
 	// traverse all the VM
 	for _, vm := range vms {
 		// if the VM's name equals to Nodename
 		if vm.Summary.Config.Name == node.Spec.Nodename {
-			tags, _ := tm.GetAttachedTags(ctx, vm.Self)
-			var curTags []string
+			// get attachedtags on this virtual machine
+			tags, err := tm.GetAttachedTags(ctx, vm.Self)
+			if err != nil {
+				msg := fmt.Sprintf("unable to retrieve tags on %s : error %s", vm.Summary.Config.Name, err)
+				log.Info(msg)
+				return ctrl.Result{}, err
+			}
 
+			// store the attachedtags info in status
+			var curTags []string
 			for _, tag := range tags {
 				curTags = append(curTags, tag.Name)
 			}
-
 			if !ArrayEqual(curTags, node.Status.ActtachedTag) {
 				node.Status.ActtachedTag = curTags
 			}
 
-			// store VM information
+			// store VM information in status
 			node.Status.VMGuestId = string(vm.Summary.Guest.GuestId)
 			node.Status.VMTotalCPU = int64(vm.Summary.Config.NumCpu)
 			node.Status.VMResvdCPU = int64(vm.Summary.Config.CpuReservation)
@@ -147,7 +150,6 @@ func (r *NodeInfoReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 
 			// traverse the network, in our operator, we consider only single network
 			for _, ref := range vm.Network {
-
 				if ref.Type == "Network" {
 					// if it's a normal Network, define the n as DistributedVirtualPortgroup mo.Network
 					var n mo.Network
@@ -166,6 +168,7 @@ func (r *NodeInfoReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 					node.Status.NetName = string(n.Name)
 					node.Status.NetOverallStatus = string(n.OverallStatus)
 				} else if ref.Type == "DistributedVirtualPortgroup" {
+
 					// if it's a distributed network, define the n as mo.DistributedVirtualPortgroup
 					var pg mo.DistributedVirtualPortgroup
 					node.Status.NetSwitchType = "Distributed"
@@ -183,7 +186,8 @@ func (r *NodeInfoReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 					node.Status.NetName = string(pg.Name)
 					node.Status.NetOverallStatus = string(pg.OverallStatus)
 
-					// get vlanID
+					// get vlanID - more examples to use type assertion to access extended types in govmomi
+					// - https://github.com/vKubeViewer/vkubeviewer/blob/main/ctrl_dev/getvlanid/main.go
 					portConfig := pg.Config.DefaultPortConfig.(*types.VMwareDVSPortSetting)
 					vlan := portConfig.Vlan.(*types.VmwareDistributedVirtualSwitchVlanIdSpec)
 					node.Status.NetVlanId = vlan.VlanId

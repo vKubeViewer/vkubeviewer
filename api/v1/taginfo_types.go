@@ -34,10 +34,6 @@ type TagInfoStatus struct {
 	ClusterList    []string `json:"cluster_list,omitempty"`
 	HostList       []string `json:"host_list,omitempty"`
 	VMList         []string `json:"vm_list,omitempty"`
-	// DatastoreList []string `json:"datastore_list,omitempty"`
-	// NetworkList   []string `json:"network_list,omitempty"`
-
-	// DatacenterList []string
 }
 
 // +kubebuilder:validation:Optional

@@ -22,7 +22,6 @@ import (
 	"time"
 
 	"github.com/go-logr/logr"
-	"github.com/vmware/govmomi"
 	"github.com/vmware/govmomi/find"
 	"github.com/vmware/govmomi/property"
 	"github.com/vmware/govmomi/vim25"
@@ -40,11 +39,10 @@ import (
 // FCDInfoReconciler reconciles a FCDInfo object
 type FCDInfoReconciler struct {
 	client.Client
-	VC_vim25   *vim25.Client
-	VC_govmomi *govmomi.Client
-	Finder     *find.Finder
-	Log        logr.Logger
-	Scheme     *runtime.Scheme
+	VC     *vim25.Client
+	Finder *find.Finder
+	Log    logr.Logger
+	Scheme *runtime.Scheme
 }
 
 //+kubebuilder:rbac:groups=topology.vkubeviewer.com,resources=fcdinfoes,verbs=get;list;watch;create;update;patch;delete
@@ -84,9 +82,7 @@ func (r *FCDInfoReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 	// Retrieve Session
 	// ------------
 
-	//
 	// Find the datastores available on this vSphere Infrastructure
-	//
 
 	// dss - datastores
 	dss, err := r.Finder.DatastoreList(ctx, "*")
@@ -99,19 +95,16 @@ func (r *FCDInfoReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		msg := fmt.Sprintf("FCDInfo: Number of datastores found - %v", len(dss))
 		log.Info(msg)
 
-		pc := property.DefaultCollector(r.VC_govmomi.Client)
-		//
+		pc := property.DefaultCollector(r.VC)
+
 		// "finder" only lists - to get really detailed info,
 		// Convert datastores into list of references
-		//
 		var refs []types.ManagedObjectReference
 		for _, ds := range dss {
 			refs = append(refs, ds.Reference())
 		}
 
-		//
 		// Retrieve name property for all datastore
-		//
 		var dst []mo.Datastore
 		err = pc.Retrieve(ctx, refs, []string{"name"}, &dst)
 		if err != nil {
@@ -119,31 +112,36 @@ func (r *FCDInfoReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 			return ctrl.Result{}, err
 		}
 
-		m := vslm.NewObjectManager(r.VC_vim25)
+		m := vslm.NewObjectManager(r.VC)
 
-		//
 		// -- Display the FCDs on each datastore (held in array dst)
-		//
 
 		var objids []types.ID
 		var idinfo *types.VStorageObject
 
 		for _, newds := range dst {
 			objids, err = m.List(ctx, newds)
-			//
+			if err != nil {
+				msg := fmt.Sprintf("unable to list types.ID  : error %s", err)
+				log.Info(msg)
+				return ctrl.Result{}, err
+			}
 			// -- With the list of FCD Ids, we can get further information about the FCD retrievec in VStorageObject
-			//
 			for _, id := range objids {
 				idinfo, err = m.Retrieve(ctx, newds, id.Id)
-				//
+				if err != nil {
+					msg := fmt.Sprintf("unable to Retrieve VStorageObject information : error %s", err)
+					log.Info(msg)
+					return ctrl.Result{}, err
+				}
 				// -- Note the TKGS Guest Clusters have a different PV ID
 				// -- to the one that is created for them in the Supervisor
 				// -- This only works for the Supervisor PV ID
-				//
 				if idinfo.Config.BaseConfigInfo.Name == fcd.Spec.PVId {
 					msg := fmt.Sprintf("FCDInfo: %v matches %v", idinfo.Config.BaseConfigInfo.Name, fcd.Spec.PVId)
 					log.Info(msg)
 
+					// store information into FCDInfo's status
 					fcd.Status.SizeMB = int64(idinfo.Config.CapacityInMB)
 					backing := idinfo.Config.BaseConfigInfo.Backing.(*types.BaseConfigInfoDiskFileBackingInfo)
 					fcd.Status.FilePath = string(backing.FilePath)
@@ -151,6 +149,9 @@ func (r *FCDInfoReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 				}
 			}
 		}
+		// ------------
+		// Update Session
+		// ------------
 
 		if err := r.Status().Update(ctx, fcd); err != nil {
 			log.Error(err, "unable to update FCDInfo status")
