@@ -12,14 +12,14 @@
 - Access to a Container Image Repository (docker.io, quay.io, harbor)
 - Make binary  → `sudo apt install make`
 
-**Step2 : ** Get the **vKubeViewer** operator to your desktop
+**Step 2 :** Get the **vKubeViewer** operator to your desktop
 
 ```
 git clone https://github.com/vKubeViewer/vkubeviewer.git
 cd vkubeviewer
 ```
 
-**Step3: ** Run the below script to get required go and govmomi packages
+**Step 3:** Run the below script to get required go and govmomi packages
 
 ```
 chmod +x ./go-pack.sh
@@ -33,19 +33,19 @@ You can check the currently installed CRDs on your K8s cluster by :
 kubectl get crd
 ```
 
-**Step3:**  Install the CRDs from this operator.
+**Step 4:**  Install the CRDs from this operator.
 
 ```
 make install
 ```
 
-**Step 4:**  Check your newly installed CRDs.
+**Step 5:**  Check your newly installed CRDs.
 
 ```
 kubectl get crd
 ```
 
-**Step 5**: **Edit** the CR sample yaml in *config/samples* folder, choose the one you want to view. For instance to view VM information, edit the spec field and put your VM name in **nodename**  field in ***config/samples/topology_v1_nodeinfo.yaml*** as shown below:
+**Step 6:** **Edit** the CR sample yaml in *config/samples* folder, choose the one you want to view. For instance to view VM information, edit the spec field and put your VM name in **nodename**  field in ***config/samples/topology_v1_nodeinfo.yaml*** as shown below:
 
 ```
 cd config/samples
@@ -62,13 +62,13 @@ spec:
 nodename: k8s-worker-01
 ```
 
-**Step 6:** **Apply** the above YAML to create your custom resource
+**Step 7:** **Apply** the above YAML to create your custom resource
 
 ```
 kubectl apply -f topology_v1_nodeinfo.yaml
 ```
 
-**Step 7:** **Query** the CR we just created, check if the **nodename** field is also printed.
+**Step 8:** **Query** the CR we just created, check if the **nodename** field is also printed.
 
 ```
 kubectl get nodeinfo
@@ -77,13 +77,13 @@ NAME           NODENAME
 k8s-worker-1   k8s-worker-01
 ```
 
-**Step 8:**To build the manager code locally, you can run the following make command: 
+**Step 9:**To build the manager code locally, you can run the following make command: 
 
 **Note:** Skip to step 11 if you want to build the manager on a pod using a publicly accessible image.
 
 ```
 cd ../..
-make manager 
+make build 
 ```
 
 This should have build the manager binary in bin/manager. Before running the manager in standalone code, we need to set three environmental variables to allow us to connect to the vCenter Server. They are:
@@ -94,7 +94,7 @@ export GOVMOMI_USERNAME=Your_Username@vsphere.local
 export GOVMOMI_PASSWORD=Your_VC_Password
 ```
 
-**Step 9:** The manager can now be started in standalone mode, run:
+**Step 10:** The manager can now be started in standalone mode, run:
 
 ```
 bin/manager
@@ -121,7 +121,7 @@ The output should look like:
 
 You can apply more CRDs from the samples folder for other resources. 
 
-**Step 10** : We can run the below command to see the required fields in the status field of the CRD.
+**Step 11** : We can run the below command to see the required fields in the status field of the CRD.
 
 ```
 kubectl get nodeinfo -o yaml
@@ -162,7 +162,7 @@ selfLink: ""
 
 ## Running the controller-manager on a pod in your K8s cluster
 
-**Step 11:** Login into [Docker.io](http://docker.io) as you will need to get the controller image stored in vkubeviewer repository.
+**Step 12:** Login into [Docker.io](http://docker.io) as you will need to get the controller image stored in vkubeviewer repository.
 
 ```
 docker login —username dockerID —password 'My_password'
@@ -174,7 +174,7 @@ Set the environment variable IMG to point at the required image.
 export IMG=docker.io/vkubeviewer/controller-manager:latest
 ```
 
-**Step 12:** Create the **namespace** and **secret** used by the controller pod.
+**Step 13:** Create the **namespace** and **secret** used by the controller pod.
 
 ```
 kubectl create ns vkubeviewer-system
@@ -191,13 +191,13 @@ kubectl create secret generic vc-creds-1 \
 [output]secret/vc-creds-1 created
 ```
 
-**Step13:** Create the deployment with 1 replica set which ensures that the controller pod keeps running. run:
+**Step14:** Create the deployment with 1 replica set which ensures that the controller pod keeps running. run:
 
 ```
 make deploy
 ```
 
-**Step 14:** Check the pod is running fine with both the containers in ready and running state.
+**Step 15:** Check the pod is running fine with both the containers in ready and running state.
 
 ```
 kubectl get pods -n vkubeviewer-system
@@ -206,13 +206,13 @@ NAME                                          READY   STATUS    RESTARTS   AGE
 vkubeviewer-controller-manager-566c6fffdb-fxjr2   2/2     Running   0          2m39s
 ```
 
-**Step 15:** Re-apply the sample YAMLs for the custom resources to be monitored by the above pod. 
+**Step 16:** Re-apply the sample YAMLs for the custom resources to be monitored by the above pod. 
 
 ```
 kustomize build config/samples | kubectl create -f -
 ```
 
-**Step 16:** Finally, we can run the below command to see the required fields in the status field of the CRDs.
+**Step 17:** Finally, we can run the below command to see the required fields in the status field of the CRDs.
 
 ```
 kubectl get hostinfo -o yaml
@@ -249,7 +249,7 @@ metadata:
   selfLink: ""
 ```
 
-### Step 17: Clean Up.
+### Step 18: Clean Up.
 
 Remove the CRDs
 
