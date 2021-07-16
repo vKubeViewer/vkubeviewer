@@ -133,9 +133,8 @@ func (r *NodeInfoReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 			for _, tag := range tags {
 				curTags = append(curTags, tag.Name)
 			}
-			if !ArrayEqual(curTags, node.Status.ActtachedTag) {
-				node.Status.ActtachedTag = curTags
-			}
+
+			node.Status.ActtachedTag = UpdateStatus(curTags, node.Status.ActtachedTag)
 
 			// store VM information in status
 			node.Status.VMGuestId = string(vm.Summary.Guest.GuestId)
