@@ -75,7 +75,7 @@ func createDatastoreInfo(ctx context.Context, mgr manager.Manager, vim25client *
 
 	var dss []mo.Datastore
 
-	err = vds.Retrieve(ctx, []string{"Datastore"}, nil, &dss)
+	err = vds.Retrieve(ctx, []string{"Datastore"}, []string{"name"}, &dss)
 	if err != nil {
 		msg := fmt.Sprintf("unable to retrieve Datastore info: error %s", err)
 		setupLog.Info(msg)
@@ -93,8 +93,8 @@ func createDatastoreInfo(ctx context.Context, mgr manager.Manager, vim25client *
 	for _, ds := range dss {
 		datastore := &topologyv1.DatastoreInfo{
 			TypeMeta:   metav1.TypeMeta{Kind: "DatastoreInfo", APIVersion: "topology.vkubeviewer.com/v1"},
-			ObjectMeta: metav1.ObjectMeta{Name: strings.ToLower(ds.Summary.Name), Namespace: "default"},
-			Spec:       topologyv1.DatastoreInfoSpec{Datastore: ds.Summary.Name},
+			ObjectMeta: metav1.ObjectMeta{Name: strings.ToLower(ds.Name), Namespace: "default"},
+			Spec:       topologyv1.DatastoreInfoSpec{Datastore: ds.Name},
 			Status:     topologyv1.DatastoreInfoStatus{},
 		}
 
@@ -102,11 +102,90 @@ func createDatastoreInfo(ctx context.Context, mgr manager.Manager, vim25client *
 
 			setupLog.Error(err, "unable to create Datastore")
 		} else {
-			msg := fmt.Sprintf("Create DatastoreInfo object %s", ds.Summary.Name)
+			msg := fmt.Sprintf("Create DatastoreInfo object %s", ds.Name)
 			setupLog.Info(msg)
 		}
 
 	}
+	return err
+}
+
+func createHostInfo(ctx context.Context, mgr manager.Manager, vim25client *vim25.Client) error {
+	m := view.NewManager(vim25client)
+	vhosts, err := m.CreateContainerView(ctx, vim25client.ServiceContent.RootFolder, []string{"HostSystem"}, true)
+	if err != nil {
+		msg := fmt.Sprintf("unable to create container view for HostSystem: error %s", err)
+		setupLog.Info(msg)
+	} else {
+		msg := fmt.Sprintf("succeed to create container view for HostSystem")
+		setupLog.Info(msg)
+	}
+	defer vhosts.Destroy(ctx)
+
+	var hosts []mo.HostSystem
+
+	err = vhosts.Retrieve(ctx, []string{"HostSystem"}, []string{"name"}, &hosts)
+	if err != nil {
+		msg := fmt.Sprintf("unable to retrieve HostSystem info: error %s", err)
+		setupLog.Info(msg)
+	} else {
+		msg := fmt.Sprintf("succeed to retrieve HostSystem info")
+		setupLog.Info(msg)
+	}
+
+	// ------------
+	// Create DatastoreInfo with K8s CRD
+	// ------------
+
+	c := mgr.GetClient()
+
+	for _, host := range hosts {
+		datastore := &topologyv1.HostInfo{
+			TypeMeta:   metav1.TypeMeta{Kind: "HostInfo", APIVersion: "topology.vkubeviewer.com/v1"},
+			ObjectMeta: metav1.ObjectMeta{Name: strings.ToLower(host.Name), Namespace: "default"},
+			Spec:       topologyv1.HostInfoSpec{Hostname: host.Name},
+			Status:     topologyv1.HostInfoStatus{},
+		}
+
+		if err := c.Create(ctx, datastore); err != nil {
+
+			setupLog.Error(err, "unable to create Host")
+		} else {
+			msg := fmt.Sprintf("Create HostInfo object %s", host.Name)
+			setupLog.Info(msg)
+		}
+
+	}
+	return err
+}
+
+func createNodeInfo(ctx context.Context, mgr manager.Manager, vim25client *vim25.Client) error {
+	var k8snodes = controllers.ListK8sNodes()
+
+	// ------------
+	// Create DatastoreInfo with K8s CRD
+	// ------------
+
+	c := mgr.GetClient()
+	var err error
+	for _, n := range k8snodes {
+		node := &topologyv1.NodeInfo{
+			TypeMeta:   metav1.TypeMeta{Kind: "NodeInfo", APIVersion: "topology.vkubeviewer.com/v1"},
+			ObjectMeta: metav1.ObjectMeta{Name: strings.ToLower(n), Namespace: "default"},
+			Spec:       topologyv1.NodeInfoSpec{Nodename: n},
+			Status:     topologyv1.NodeInfoStatus{},
+		}
+
+		if err := c.Create(ctx, node); err != nil {
+			setupLog.Error(err, "unable to create Node")
+			return err
+		} else {
+			msg := fmt.Sprintf("Create NodeInfo object %s", n)
+			setupLog.Info(msg)
+		}
+
+	}
+
 	return err
 }
 
@@ -233,6 +312,16 @@ func main() {
 	err = createDatastoreInfo(ctx, mgr, vim25client)
 	if err != nil {
 		setupLog.Error(err, "Manager: Could not create DatastorInfo")
+	}
+
+	err = createHostInfo(ctx, mgr, vim25client)
+	if err != nil {
+		setupLog.Error(err, "Manager: Could not create HostInfo")
+	}
+
+	err = createNodeInfo(ctx, mgr, vim25client)
+	if err != nil {
+		setupLog.Error(err, "Manager: Could not create NodeInfo")
 	}
 
 	//Modified Reconcile call
