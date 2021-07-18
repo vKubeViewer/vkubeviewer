@@ -140,7 +140,7 @@ func (r *DatastoreInfoReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 
 			// if curHostsMounted is different from the one stored in status, replace it
 
-			dsinfo.Status.HostsMounted = UpdateStatus(curHostsMounted, dsinfo.Status.HostsMounted)
+			dsinfo.Status.HostsMounted = UpdateStatusList(dsinfo.Status.HostsMounted, curHostsMounted)
 
 		}
 	}

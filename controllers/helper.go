@@ -44,18 +44,18 @@ func ByteCountIEC(b int64) string {
 		float64(b)/float64(div), "KMGTPE"[exp])
 }
 
-// UpdateStatus checks two arrays are the same or not,
+// UpdateStatusList checks two arrays are the same or not,
 // if they are different, return the second array
-func UpdateStatus(first, second []string) []string {
-	if len(first) != len(second) {
-		return second
+func UpdateStatusList(status, current []string) []string {
+	if len(status) != len(current) {
+		return current
 	}
-	for i, v := range first {
-		if second[i] != v {
-			return second
+	for i, v := range status {
+		if current[i] != v {
+			return current
 		}
 	}
-	return first
+	return current
 
 }
 
