@@ -19,17 +19,21 @@ package main
 import (
 	"context"
 	"flag"
+	"fmt"
 	"net/url"
 	"os"
+	"strings"
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
 	// to ensure that exec-entrypoint and run can make use of them.
-
 	"github.com/vmware/govmomi/find"
 	"github.com/vmware/govmomi/session/cache"
 	"github.com/vmware/govmomi/vapi/rest"
+	"github.com/vmware/govmomi/view"
 	"github.com/vmware/govmomi/vim25"
+	"github.com/vmware/govmomi/vim25/mo"
 	"github.com/vmware/govmomi/vim25/soap"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 
 	"k8s.io/apimachinery/pkg/runtime"
@@ -158,6 +162,9 @@ func main() {
 	if err != nil {
 		setupLog.Error(err, "unable to get login session to vSphere")
 		os.Exit(1)
+	} else {
+		setupLog.Info("succeed to get login session to vSphere")
+
 	}
 
 	finder := find.NewFinder(vim25client, true)
@@ -170,6 +177,56 @@ func main() {
 		setupLog.Error(err, "Manager: Could not get default datacenter")
 	} else {
 		finder.SetDatacenter(dc)
+
+	}
+
+	// ------------
+	// Get Datastore List on vSphere Client
+	// ------------
+	m := view.NewManager(vim25client)
+	vds, err := m.CreateContainerView(ctx, vim25client.ServiceContent.RootFolder, []string{"Datastore"}, true)
+	if err != nil {
+		msg := fmt.Sprintf("unable to create container view for Datastore: error %s", err)
+		setupLog.Info(msg)
+	} else {
+		msg := fmt.Sprintf("succeed to create container view for Datastore")
+		setupLog.Info(msg)
+	}
+	defer vds.Destroy(ctx)
+
+	var dss []mo.Datastore
+
+	err = vds.Retrieve(ctx, []string{"Datastore"}, nil, &dss)
+	if err != nil {
+		msg := fmt.Sprintf("unable to retrieve Datastore info: error %s", err)
+		setupLog.Info(msg)
+	} else {
+		msg := fmt.Sprintf("succeed to retrieve Datastore info")
+		setupLog.Info(msg)
+	}
+
+	// ------------
+	// Create DatastoreInfo with K8s CRD
+	// ------------
+
+	c := mgr.GetClient()
+
+	for _, ds := range dss {
+		datastore := &topologyv1.DatastoreInfo{
+			TypeMeta:   metav1.TypeMeta{Kind: "DatastoreInfo", APIVersion: "topology.vkubeviewer.com/v1"},
+			ObjectMeta: metav1.ObjectMeta{Name: strings.ToLower(ds.Summary.Name), Namespace: "default"},
+			Spec:       topologyv1.DatastoreInfoSpec{Datastore: ds.Summary.Name},
+			Status:     topologyv1.DatastoreInfoStatus{},
+		}
+
+		if err := c.Create(ctx, datastore); err != nil {
+
+			setupLog.Error(err, "unable to create Datastore")
+		} else {
+			msg := fmt.Sprintf("Create DatastoreInfo object %s", ds.Summary.Name)
+			setupLog.Info(msg)
+		}
+
 	}
 
 	//Modified Reconcile call
