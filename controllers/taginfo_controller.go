@@ -95,6 +95,14 @@ func (r *TagInfoReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		return ctrl.Result{}, err
 	}
 
+	category, err := tm.GetCategory(ctx, tag.CategoryID)
+	if err != nil {
+		msg := fmt.Sprintf("unable to get tags.Category based on the %s : error %s", tag.CategoryID, err)
+		log.Info(msg)
+		return ctrl.Result{}, err
+	}
+	taginfo.Status.Category = category.Name
+
 	// list ListAttachedObjects with tag.ID
 	objs, err := tm.ListAttachedObjects(ctx, tag.ID)
 	if err != nil {
