@@ -30,6 +30,7 @@ type TagInfoSpec struct {
 
 // TagInfoStatus defines the observed state of TagInfo
 type TagInfoStatus struct {
+	Category       string   `json:"category,omitempty"`
 	DatacenterList []string `json:"datacenter_list,omitempty"`
 	ClusterList    []string `json:"cluster_list,omitempty"`
 	HostList       []string `json:"host_list,omitempty"`
@@ -39,6 +40,7 @@ type TagInfoStatus struct {
 // +kubebuilder:validation:Optional
 // +kubebuilder:resource:shortName={"tag"}
 // +kubebuilder:printcolumn:name="Tagname",type=string,JSONPath=`.spec.tagname`
+// +kubebuilder:printcolumn:name="Category",type=string,JSONPath=`.status.category`
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 

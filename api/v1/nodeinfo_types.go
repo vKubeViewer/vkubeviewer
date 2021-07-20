@@ -30,6 +30,7 @@ type NodeInfoSpec struct {
 
 // NodeInfoStatus defines the observed state of NodeInfo
 type NodeInfoStatus struct {
+	// cpu, memory, vmipaddress, powerstate
 	ActtachedTag []string `json:"acttached_tag,omitempty"`
 	VMGuestId    string   `json:"vm_guest_id,omitempty"`
 	VMTotalCPU   int64    `json:"vm_total_cpu,omitempty"`
@@ -50,6 +51,12 @@ type NodeInfoStatus struct {
 // +kubebuilder:validation:Optional
 // +kubebuilder:resource:shortName={"nd"}
 // +kubebuilder:printcolumn:name="Nodename",type=string,JSONPath=`.spec.nodename`
+// +kubebuilder:printcolumn:name="VMTotalCPU",type=string,JSONPath=`.status.vm_total_cpu`
+// +kubebuilder:printcolumn:name="VMResvdCPU",type=string,JSONPath=`.status.vm_resvd_cpu`
+// +kubebuilder:printcolumn:name="VMTotalMem",type=string,JSONPath=`.status.vm_total_mem`
+// +kubebuilder:printcolumn:name="VMResvdMem",type=string,JSONPath=`.status.vm_resvd_mem`
+// +kubebuilder:printcolumn:name="VMPowerState",type=string,JSONPath=`.status.vm_power_state`
+// +kubebuilder:printcolumn:name="VMIpAddress",type=string,JSONPath=`.status.vm_ip_address`
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 

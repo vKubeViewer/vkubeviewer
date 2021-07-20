@@ -30,13 +30,19 @@ type HostInfoSpec struct {
 
 // HostInfoStatus defines the observed state of HostInfo
 type HostInfoStatus struct {
-	TotalCPU int64 `json:"totalCPU"`
-	FreeCPU  int64 `json:"freeCPU"`
+	TotalCPU    int64 `json:"total_cpu,omitempty"`
+	FreeCPU     int64 `json:"free_cpu,omitempty"`
+	TotalMemory int64 `json:"total_memory,omitempty"`
+	FreeMemory  int64 `json:"free_memory,omitempty"`
 }
 
 // +kubebuilder:validation:Optional
 // +kubebuilder:resource:shortName={"hi"}
 // +kubebuilder:printcolumn:name="Hostname",type=string,JSONPath=`.spec.hostname`
+// +kubebuilder:printcolumn:name="TotalCPU",type=string,JSONPath=`.status.total_cpu`
+// +kubebuilder:printcolumn:name="FreeCPU",type=string,JSONPath=`.status.free_cpu`
+// +kubebuilder:printcolumn:name="TotalMemory",type=string,JSONPath=`.status.total_memory`
+// +kubebuilder:printcolumn:name="FreeMemory",type=string,JSONPath=`.status.free_memory`
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 

@@ -195,7 +195,7 @@ func (r *TagInfoReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 					curVMList = append(curVMList, strings.Join(str, " "))
 				} else {
 					// if the vm is a k8s node, add marker "k8s"
-					str := []string{"k8s", vm.Name, "[", clustercomputeresource.Name, "]"}
+					str := []string{vm.Name, "[", clustercomputeresource.Name, "]", "[ CURRENT ]"}
 					curVMList = append(curVMList, strings.Join(str, " "))
 				}
 			}

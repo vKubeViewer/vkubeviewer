@@ -41,6 +41,9 @@ type DatastoreInfoStatus struct {
 // +kubebuilder:validation:Optional
 // +kubebuilder:resource:shortName={"ds"}
 // +kubebuilder:printcolumn:name="Datastore",type=string,JSONPath=`.spec.datastore`
+// +kubebuilder:printcolumn:name="Type",type=string,JSONPath=`.status.type`
+// +kubebuilder:printcolumn:name="Capacity",type=string,JSONPath=`.status.capacity`
+// +kubebuilder:printcolumn:name="FreeSpace ",type=string,JSONPath=`.status.free_space`
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 
