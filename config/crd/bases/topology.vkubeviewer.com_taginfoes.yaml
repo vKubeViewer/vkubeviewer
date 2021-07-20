@@ -22,6 +22,9 @@ spec:
     - jsonPath: .spec.tagname
       name: Tagname
       type: string
+    - jsonPath: .status.category
+      name: Category
+      type: string
     name: v1
     schema:
       openAPIV3Schema:
@@ -48,6 +51,8 @@ spec:
           status:
             description: TagInfoStatus defines the observed state of TagInfo
             properties:
+              category:
+                type: string
               cluster_list:
                 items:
                   type: string

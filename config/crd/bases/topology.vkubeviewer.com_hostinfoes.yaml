@@ -22,6 +22,18 @@ spec:
     - jsonPath: .spec.hostname
       name: Hostname
       type: string
+    - jsonPath: .status.total_cpu
+      name: TotalCPU
+      type: string
+    - jsonPath: .status.free_cpu
+      name: FreeCPU
+      type: string
+    - jsonPath: .status.total_memory
+      name: TotalMemory
+      type: string
+    - jsonPath: .status.free_memory
+      name: FreeMemory
+      type: string
     name: v1
     schema:
       openAPIV3Schema:
@@ -48,12 +60,16 @@ spec:
           status:
             description: HostInfoStatus defines the observed state of HostInfo
             properties:
-              freeCPU:
+              free_cpu:
                 format: int64
                 type: integer
-              totalCPU:
+              free_memory:
+                type: string
+              total_cpu:
                 format: int64
                 type: integer
+              total_memory:
+                type: string
             type: object
         type: object
     served: true

@@ -107,6 +107,8 @@ func (r *HostInfoReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 		if hs.Summary.Config.Name == hi.Spec.Hostname {
 			hi.Status.TotalCPU = int64(hs.Summary.Hardware.CpuMhz) * int64(hs.Summary.Hardware.NumCpuCores)
 			hi.Status.FreeCPU = (int64(hs.Summary.Hardware.CpuMhz) * int64(hs.Summary.Hardware.NumCpuCores)) - int64(hs.Summary.QuickStats.OverallCpuUsage)
+			hi.Status.TotalMemory = ByteCountIEC(hs.Summary.Hardware.MemorySize)
+			hi.Status.FreeMemory = ByteCountIEC(int64(hs.Summary.Hardware.MemorySize) - (int64(hs.Summary.QuickStats.OverallMemoryUsage) * 1024 * 1024))
 		}
 	}
 

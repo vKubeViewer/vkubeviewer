@@ -22,6 +22,15 @@ spec:
     - jsonPath: .spec.pvId
       name: PVId
       type: string
+    - jsonPath: .status.sizeMB
+      name: SizeMB
+      type: string
+    - jsonPath: .status.filePath
+      name: FilePath
+      type: string
+    - jsonPath: .status.provisioningType
+      name: ProvisioningType
+      type: string
     name: v1
     schema:
       openAPIV3Schema:

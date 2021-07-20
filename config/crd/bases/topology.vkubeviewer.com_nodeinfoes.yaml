@@ -22,6 +22,18 @@ spec:
     - jsonPath: .spec.nodename
       name: Nodename
       type: string
+    - jsonPath: .status.vm_total_cpu
+      name: VMTotalCPU
+      type: string
+    - jsonPath: .status.vm_total_mem
+      name: VMTotalMem
+      type: string
+    - jsonPath: .status.vm_power_state
+      name: VMPowerState
+      type: string
+    - jsonPath: .status.vm_ip_address
+      name: VMIpAddress
+      type: string
     name: v1
     schema:
       openAPIV3Schema:
@@ -49,6 +61,7 @@ spec:
             description: NodeInfoStatus defines the observed state of NodeInfo
             properties:
               acttached_tag:
+                description: cpu, memory, vmipaddress, powerstate
                 items:
                   type: string
                 type: array

@@ -52,9 +52,7 @@ type NodeInfoStatus struct {
 // +kubebuilder:resource:shortName={"nd"}
 // +kubebuilder:printcolumn:name="Nodename",type=string,JSONPath=`.spec.nodename`
 // +kubebuilder:printcolumn:name="VMTotalCPU",type=string,JSONPath=`.status.vm_total_cpu`
-// +kubebuilder:printcolumn:name="VMResvdCPU",type=string,JSONPath=`.status.vm_resvd_cpu`
 // +kubebuilder:printcolumn:name="VMTotalMem",type=string,JSONPath=`.status.vm_total_mem`
-// +kubebuilder:printcolumn:name="VMResvdMem",type=string,JSONPath=`.status.vm_resvd_mem`
 // +kubebuilder:printcolumn:name="VMPowerState",type=string,JSONPath=`.status.vm_power_state`
 // +kubebuilder:printcolumn:name="VMIpAddress",type=string,JSONPath=`.status.vm_ip_address`
 // +kubebuilder:object:root=true

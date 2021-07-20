@@ -22,6 +22,15 @@ spec:
     - jsonPath: .spec.datastore
       name: Datastore
       type: string
+    - jsonPath: .status.type
+      name: Type
+      type: string
+    - jsonPath: .status.capacity
+      name: Capacity
+      type: string
+    - jsonPath: .status.free_space
+      name: 'FreeSpace '
+      type: string
     name: v1
     schema:
       openAPIV3Schema:
