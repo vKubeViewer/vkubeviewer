@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"net/url"
 	"os"
+	"strconv"
 	"strings"
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
@@ -29,6 +30,7 @@ import (
 	"github.com/vmware/govmomi/find"
 	"github.com/vmware/govmomi/session/cache"
 	"github.com/vmware/govmomi/vapi/rest"
+	"github.com/vmware/govmomi/vapi/tags"
 	"github.com/vmware/govmomi/view"
 	"github.com/vmware/govmomi/vim25"
 	"github.com/vmware/govmomi/vim25/mo"
@@ -140,14 +142,14 @@ func createHostInfo(ctx context.Context, mgr manager.Manager, vim25client *vim25
 	c := mgr.GetClient()
 
 	for _, host := range hosts {
-		datastore := &topologyv1.HostInfo{
+		hostinfo := &topologyv1.HostInfo{
 			TypeMeta:   metav1.TypeMeta{Kind: "HostInfo", APIVersion: "topology.vkubeviewer.com/v1"},
 			ObjectMeta: metav1.ObjectMeta{Name: strings.ToLower(host.Name), Namespace: "default"},
 			Spec:       topologyv1.HostInfoSpec{Hostname: host.Name},
 			Status:     topologyv1.HostInfoStatus{},
 		}
 
-		if err := c.Create(ctx, datastore); err != nil {
+		if err := c.Create(ctx, hostinfo); err != nil {
 
 			setupLog.Error(err, "unable to create Host")
 		} else {
@@ -186,6 +188,43 @@ func createNodeInfo(ctx context.Context, mgr manager.Manager, vim25client *vim25
 
 	}
 
+	return err
+}
+
+func createTagInfo(ctx context.Context, mgr manager.Manager, restclient *rest.Client) error {
+	tm := tags.NewManager(restclient)
+
+	// ------------
+	// Create DatastoreInfo with K8s CRD
+	// ------------
+	tags, err := tm.GetTags(ctx)
+	if err != nil {
+		msg := fmt.Sprintf("unable to retrieve Tag Lists : error %s", err)
+		setupLog.Info(msg)
+	} else {
+		msg := fmt.Sprintf("succeed to retrieve Tag Lists")
+		setupLog.Info(msg)
+	}
+
+	c := mgr.GetClient()
+
+	for index, tag := range tags {
+		tag := &topologyv1.TagInfo{
+			TypeMeta:   metav1.TypeMeta{Kind: "TagInfo", APIVersion: "topology.vkubeviewer.com/v1"},
+			ObjectMeta: metav1.ObjectMeta{Name: "tag" + strconv.Itoa(index), Namespace: "default"},
+			Spec:       topologyv1.TagInfoSpec{Tagname: tag.Name},
+			Status:     topologyv1.TagInfoStatus{},
+		}
+
+		if err := c.Create(ctx, tag); err != nil {
+
+			setupLog.Error(err, "unable to create TagInfo object")
+		} else {
+			msg := fmt.Sprintf("Create TagInfo object %s", tag.Name)
+			setupLog.Info(msg)
+		}
+
+	}
 	return err
 }
 
@@ -322,6 +361,11 @@ func main() {
 	err = createNodeInfo(ctx, mgr, vim25client)
 	if err != nil {
 		setupLog.Error(err, "Manager: Could not create NodeInfo")
+	}
+
+	err = createTagInfo(ctx, mgr, restclient)
+	if err != nil {
+		setupLog.Error(err, "Manager: Could not create TagInfo")
 	}
 
 	//Modified Reconcile call
