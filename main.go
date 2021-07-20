@@ -27,6 +27,7 @@ import (
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
 	// to ensure that exec-entrypoint and run can make use of them.
+
 	"github.com/vmware/govmomi/find"
 	"github.com/vmware/govmomi/session/cache"
 	"github.com/vmware/govmomi/vapi/rest"
@@ -35,6 +36,8 @@ import (
 	"github.com/vmware/govmomi/vim25"
 	"github.com/vmware/govmomi/vim25/mo"
 	"github.com/vmware/govmomi/vim25/soap"
+	"github.com/vmware/govmomi/vim25/types"
+	"github.com/vmware/govmomi/vslm"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 
@@ -105,6 +108,80 @@ func createDatastoreInfo(ctx context.Context, mgr manager.Manager, vim25client *
 			setupLog.Error(err, "unable to create Datastore")
 		} else {
 			msg := fmt.Sprintf("Create DatastoreInfo object %s", ds.Name)
+			setupLog.Info(msg)
+		}
+
+	}
+	return err
+}
+
+func createFCDInfo(ctx context.Context, mgr manager.Manager, vim25client *vim25.Client) error {
+	m := view.NewManager(vim25client)
+	vds, err := m.CreateContainerView(ctx, vim25client.ServiceContent.RootFolder, []string{"Datastore"}, true)
+	if err != nil {
+		msg := fmt.Sprintf("unable to create container view for Datastore: error %s", err)
+		setupLog.Info(msg)
+	} else {
+		msg := fmt.Sprintf("succeed to create container view for Datastore")
+		setupLog.Info(msg)
+	}
+	defer vds.Destroy(ctx)
+
+	var dss []mo.Datastore
+
+	err = vds.Retrieve(ctx, []string{"Datastore"}, nil, &dss)
+	if err != nil {
+		msg := fmt.Sprintf("unable to retrieve Datastore info: error %s", err)
+		setupLog.Info(msg)
+	} else {
+		msg := fmt.Sprintf("succeed to retrieve Datastore info")
+		setupLog.Info(msg)
+	}
+
+	vslmmanager := vslm.NewObjectManager(vim25client)
+
+	var objids []types.ID
+	var idinfo *types.VStorageObject
+	var curFCDinfo []string
+
+	for _, newds := range dss {
+		objids, err = vslmmanager.List(ctx, newds)
+		if err != nil {
+			msg := fmt.Sprintf("unable to list types.ID  : error %s", err)
+			setupLog.Info(msg)
+			return err
+		}
+
+		for _, id := range objids {
+			idinfo, err = vslmmanager.Retrieve(ctx, newds, id.Id)
+			if err != nil {
+				msg := fmt.Sprintf("unable to Retrieve VStorageObject information : error %s", err)
+				setupLog.Info(msg)
+				return err
+			}
+			curFCDinfo = append(curFCDinfo, idinfo.Config.BaseConfigInfo.Name)
+		}
+	}
+
+	// ------------
+	// Create DatastoreInfo with K8s CRD
+	// ------------
+
+	c := mgr.GetClient()
+
+	for index, fcd := range curFCDinfo {
+		fcdindo := &topologyv1.FCDInfo{
+			TypeMeta:   metav1.TypeMeta{Kind: "FCDInfo", APIVersion: "topology.vkubeviewer.com/v1"},
+			ObjectMeta: metav1.ObjectMeta{Name: "fcd" + strconv.Itoa(index), Namespace: "default"},
+			Spec:       topologyv1.FCDInfoSpec{PVId: fcd},
+			Status:     topologyv1.FCDInfoStatus{},
+		}
+
+		if err := c.Create(ctx, fcdindo); err != nil {
+
+			setupLog.Error(err, "unable to create FCDInfo object")
+		} else {
+			msg := fmt.Sprintf("Create FCDInfo object %s", fcd)
 			setupLog.Info(msg)
 		}
 
@@ -366,6 +443,11 @@ func main() {
 	err = createTagInfo(ctx, mgr, restclient)
 	if err != nil {
 		setupLog.Error(err, "Manager: Could not create TagInfo")
+	}
+
+	err = createFCDInfo(ctx, mgr, vim25client)
+	if err != nil {
+		setupLog.Error(err, "Manager: Could not create FCDInfo")
 	}
 
 	//Modified Reconcile call
