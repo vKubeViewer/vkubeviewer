@@ -28,7 +28,7 @@ The key problem for this project is that Kubernetes has no visibility on the und
 
 [Host Information - Types](https://github.com/vKubeViewer/vkubeviewer/blob/Richard/docs/HostInformation-Types.md)
 
-[Virtual Machine Information - Types](https://github.com/vKubeViewer/vkubeviewer/blob/Richard/docs/VertualMachineInformation-Types.md)
+[Node Information](https://github.com/vKubeViewer/vkubeviewer/blob/Richard/docs/VertualMachineInformation-Types.md)
 
 [First Class Disk Information - Types](https://github.com/vKubeViewer/vkubeviewer/blob/Richard/docs/FirstClassDiskInformation-Types.md)
 
