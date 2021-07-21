@@ -32,6 +32,9 @@ The key problem for this project is that Kubernetes has no visibility on the und
 
 [First Class Disk Information](https://github.com/vKubeViewer/vkubeviewer/blob/Richard/docs/FirstClassDiskInformation-Types.md)
 
+[Tag Information](https://github.com/vKubeViewer/vkubeviewer/blob/Richard/docs/FirstClassDiskInformation-Types.md)
+
+[Data Store Information](https://github.com/vKubeViewer/vkubeviewer/blob/Richard/docs/FirstClassDiskInformation-Types.md)
 
 
 ## Project Contributors
