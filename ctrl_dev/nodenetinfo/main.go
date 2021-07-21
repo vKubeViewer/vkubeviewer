@@ -9,6 +9,7 @@ import (
 	"github.com/vmware/govmomi/view"
 	"github.com/vmware/govmomi/vim25"
 	"github.com/vmware/govmomi/vim25/mo"
+	"github.com/vmware/govmomi/vim25/types"
 )
 
 func main() {
@@ -46,7 +47,7 @@ func main() {
 					var Switchtype string
 					var Overallstatus string
 					var Netname string
-					var Vlanid int64
+					var Vlanid int32
 
 					if v.Type == "Network" {
 						var n mo.Network
@@ -62,32 +63,29 @@ func main() {
 
 					} else if v.Type == "DistributedVirtualPortgroup" {
 						fmt.Println("get here")
-						var n mo.DistributedVirtualPortgroup
+						var pg mo.DistributedVirtualPortgroup
 						Switchtype = "Distributed"
 
 						pc := property.DefaultCollector(c)
-						err = pc.Retrieve(ctx, vm.Network, nil, &n)
+						err = pc.Retrieve(ctx, vm.Network, nil, &pg)
 						if err != nil {
 							return err
 						}
-						Netname = n.Name
-						Overallstatus = string(n.OverallStatus)
+						Netname = pg.Name
+						Overallstatus = string(pg.OverallStatus)
 
-						// get vlanid
-						var dvs mo.DistributedVirtualSwitch
-						err = pc.RetrieveOne(ctx, *n.Config.DistributedVirtualSwitch, nil, &dvs)
-						if err != nil {
-							return err
+						portConfig := pg.Config.DefaultPortConfig.(*types.VMwareDVSPortSetting)
+						switch vlan := portConfig.Vlan.(type) {
+						case *types.VmwareDistributedVirtualSwitchVlanIdSpec:
+							Vlanid = vlan.VlanId
+							fmt.Printf("vlan id = %d\n", vlan.VlanId)
+						default:
+							fmt.Printf("%s type=%T\n", pg.Name, vlan)
 						}
-						fmt.Printf("%s", dvs.Uuid)
-						test := dvs.Config.GetDVSConfigInfo()
-						fmt.Printf("%s, %T\n", test, test)
-						//test = test.DefaultPortConfig.GetDVPortSetting()
-						//fmt.Printf("%s, %T\n", test, test)
 
 					}
 
-					fmt.Printf("%s %s %s\n", Switchtype, Overallstatus, Netname, Vlanid)
+					fmt.Printf("%s %s %s %d\n", Switchtype, Overallstatus, Netname, Vlanid)
 				}
 
 			}

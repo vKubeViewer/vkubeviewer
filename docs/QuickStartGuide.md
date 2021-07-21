@@ -12,17 +12,26 @@
 - Access to a Container Image Repository (docker.io, quay.io, harbor)
 - Make binary  → `sudo apt install make`
 
+ Richard
 **Step: 1.1:** Run the below shell script to import the required go and govimomi packages :
 
 ```
 ./ go-pack.sh
-```
-
-**Step 2:** Get the **vKubeViewer** operator to your desktop
+**Step 2 :** Get the **vKubeViewer** operator to your desktop
 
 ```
-git clone [https://github.com/vKubeViewer/vkubeviewer.git](https://github.com/vKubeViewer/vkubeviewer.git)
+git clone https://github.com/vKubeViewer/vkubeviewer.git
+cd vkubeviewer
+main
 ```
+
+**Step 3:** Run the below script to get required go and govmomi packages
+
+```
+chmod +x ./go-pack.sh
+./go-pack.sh
+```
+
 
 You can check the currently installed CRDs on your K8s cluster by :
 
@@ -30,30 +39,28 @@ You can check the currently installed CRDs on your K8s cluster by :
 kubectl get crd
 ```
 
-**Step3:**  Install the CRDs from this operator.
+**Step 4:**  Install the CRDs from this operator.
 
 ```
-cd vkubeviewer
-
 make install
 ```
 
-**Step 4:**  Check your newly installed CRDs.
+**Step 5:**  Check your newly installed CRDs.
 
 ```
 kubectl get crd
 ```
 
-**Step 5**: **Edit** the CR sample yaml in *config/samples* folder, choose the one you want to view. For instance to view VM information, edit the spec field and put your VM name in **nodename**  field in ***config/samples/topology_v1_vminfo.yaml*** as shown below:
+**Step 6:** **Edit** the CR sample yaml in *config/samples* folder, choose the one you want to view. For instance to view VM information, edit the spec field and put your VM name in **nodename**  field in ***config/samples/topology_v1_nodeinfo.yaml*** as shown below:
 
 ```
 cd config/samples
-cat topology_v1_vminfo.yaml 
+cat topology_v1_nodeinfo.yaml 
 ```
 
 ```
 apiVersion: topology.vkubeviewer.com/v1
-kind: VMInfo
+kind: NodeInfo
 metadata:
 name: k8s-worker-1
 spec:
@@ -61,40 +68,39 @@ spec:
 nodename: k8s-worker-01
 ```
 
-**Step 6:** **Apply** the above YAML to create your custom resource
+**Step 7:** **Apply** the above YAML to create your custom resource
 
 ```
-kubectl apply -f topology_v1_vminfo**.**yaml
+kubectl apply -f topology_v1_nodeinfo.yaml
 ```
 
-**Step 7:** **Query** the CR we just created, check if the **nodename** field is also printed.
+**Step 8:** **Query** the CR we just created, check if the **nodename** field is also printed.
 
 ```
-kubectl get vminfo
+kubectl get nodeinfo
 
 NAME           NODENAME
 k8s-worker-1   k8s-worker-01
 ```
 
-**Step 8:**To build the manager code locally, you can run the following make command: 
+**Step 9:**To build the manager code locally, you can run the following make command: 
 
 **Note:** Skip to step 11 if you want to build the manager on a pod using a publicly accessible image.
 
 ```
-cd ..
-cd ..
-make manager 
+cd ../..
+make build 
 ```
 
 This should have build the manager binary in bin/manager. Before running the manager in standalone code, we need to set three environmental variables to allow us to connect to the vCenter Server. They are:
 
 ```
-export GOVMOMI_HOSTNAME=192.168.0.100
-export GOVMOMI_USERNAME=administrator@vsphere.local
-export GOVMOMI_PASSWORD='My_VC_Password'
+export GOVMOMI_URL=Your_Vcenter_URL
+export GOVMOMI_USERNAME=Your_Username@vsphere.local
+export GOVMOMI_PASSWORD=Your_VC_Password
 ```
 
-**Step 9:** The manager can now be started in standalone mode, run:
+**Step 10:** The manager can now be started in standalone mode, run:
 
 ```
 bin/manager
@@ -106,36 +112,36 @@ The output should look like:
 2021-06-30T16:35:05.649+0100	INFO	controller-runtime.metrics	metrics server is starting to listen	{"addr": ":8080"}
 2021-06-30T16:35:05.650+0100	INFO	setup	starting manager
 2021-06-30T16:35:05.650+0100	INFO	controller-runtime.manager.controller.fcdinfo	Starting EventSource	{"reconciler group": "[topology.vkubeviewer.com](http://topology.vkubeviewer.com/)", "reconciler kind": "FCDInfo", "source": "kind source: /, Kind="}
-2021-06-30T16:35:05.650+0100	INFO	controller-runtime.manager.controller.vminfo	Starting EventSource	{"reconciler group": "[topology.vkubeviewer.com](http://topology.vkubeviewer.com/)", "reconciler kind": "VMInfo", "source": "kind source: /, Kind="}
+2021-06-30T16:35:05.650+0100	INFO	controller-runtime.manager.controller.nodeinfo	Starting EventSource	{"reconciler group": "[topology.vkubeviewer.com](http://topology.vkubeviewer.com/)", "reconciler kind": "NodeInfo", "source": "kind source: /, Kind="}
 2021-06-30T16:35:05.650+0100	INFO	controller-runtime.manager.controller.hostinfo	Starting EventSource	{"reconciler group": "[topology.vkubeviewer.com](http://topology.vkubeviewer.com/)", "reconciler kind": "HostInfo", "source": "kind source: /, Kind="}
 2021-06-30T16:35:05.650+0100	INFO	controller-runtime.manager	starting metrics server	{"path": "/metrics"}
 2021-06-30T16:35:05.751+0100	INFO	controller-runtime.manager.controller.hostinfo	Starting Controller	{"reconciler group": "[topology.vkubeviewer.com](http://topology.vkubeviewer.com/)", "reconciler kind": "HostInfo"}
-2021-06-30T16:35:05.751+0100	INFO	controller-runtime.manager.controller.vminfo	Starting Controller	{"reconciler group": "[topology.vkubeviewer.com](http://topology.vkubeviewer.com/)", "reconciler kind": "VMInfo"}
-2021-06-30T16:35:05.751+0100	INFO	controller-runtime.manager.controller.vminfo	Starting workers	{"reconciler group": "[topology.vkubeviewer.com](http://topology.vkubeviewer.com/)", "reconciler kind": "VMInfo", "worker count": 1}
+2021-06-30T16:35:05.751+0100	INFO	controller-runtime.manager.controller.nodeinfo	Starting Controller	{"reconciler group": "[topology.vkubeviewer.com](http://topology.vkubeviewer.com/)", "reconciler kind": "NodeInfo"}
+2021-06-30T16:35:05.751+0100	INFO	controller-runtime.manager.controller.nodeinfo	Starting workers	{"reconciler group": "[topology.vkubeviewer.com](http://topology.vkubeviewer.com/)", "reconciler kind": "NodeInfo", "worker count": 1}
 2021-06-30T16:35:05.751+0100	INFO	controller-runtime.manager.controller.hostinfo	Starting workers	{"reconciler group": "[topology.vkubeviewer.com](http://topology.vkubeviewer.com/)", "reconciler kind": "HostInfo", "worker count": 1}
 2021-06-30T16:35:05.751+0100	INFO	controller-runtime.manager.controller.fcdinfo	Starting Controller	{"reconciler group": "[topology.vkubeviewer.com](http://topology.vkubeviewer.com/)", "reconciler kind": "FCDInfo"}
 2021-06-30T16:35:05.752+0100	INFO	controller-runtime.manager.controller.fcdinfo	Starting workers	{"reconciler group": "[topology.vkubeviewer.com](http://topology.vkubeviewer.com/)", "reconciler kind": "FCDInfo", "worker count": 1}
-2021-06-30T16:35:05.752+0100	INFO	controllers.VMInfo	received reconcile request for "k8s-worker-1" (namespace: "default")	{"VMInfo": "default/k8s-worker-1"}
-2021-06-30T16:35:05.811+0100	INFO	controllers.VMInfo	received reconcile request for "k8s-worker-1" (namespace: "default")	{"VMInfo": "default/k8s-worker-1"}
+2021-06-30T16:35:05.752+0100	INFO	controllers.NodeInfo	received reconcile request for "k8s-worker-1" (namespace: "default")	{"NodeInfo": "default/k8s-worker-1"}
+2021-06-30T16:35:05.811+0100	INFO	controllers.NodeInfo	received reconcile request for "k8s-worker-1" (namespace: "default")	{"NodeInfo": "default/k8s-worker-1"}
 ```
 
 You can apply more CRDs from the samples folder for other resources. 
 
-**Step 10** : We can run the below command to see the required fields in the status field of the CRD.
+**Step 11** : We can run the below command to see the required fields in the status field of the CRD.
 
 ```
-kubectl get vminfo -o yaml
+kubectl get nodeinfo -o yaml
 ```
 
 Output:
 
 ```
 apiVersion: [topology.vkubeviewer.com/v1](http://topology.vkubeviewer.com/v1)
-kind: VMInfo
+kind: NodeInfo
 metadata:
 annotations:
 [kubectl.kubernetes.io/last-applied-configuration:](http://kubectl.kubernetes.io/last-applied-configuration:) |
-{"apiVersion":"[topology.vkubeviewer.com/v1","kind":"VMInfo","metadata":{"annotations":{},"name":"k8s-worker-1","namespace":"default"},"spec":{"nodename":"k8s-worker-01](http://topology.vkubeviewer.com/v1%22,%22kind%22:%22VMInfo%22,%22metadata%22:%7B%22annotations%22:%7B%7D,%22name%22:%22k8s-worker-1%22,%22namespace%22:%22default%22%7D,%22spec%22:%7B%22nodename%22:%22k8s-worker-01)"}}
+{"apiVersion":"[topology.vkubeviewer.com/v1","kind":"NodeInfo","metadata":{"annotations":{},"name":"k8s-worker-1","namespace":"default"},"spec":{"nodename":"k8s-worker-01](http://topology.vkubeviewer.com/v1%22,%22kind%22:%22NodeInfo%22,%22metadata%22:%7B%22annotations%22:%7B%7D,%22name%22:%22k8s-worker-1%22,%22namespace%22:%22default%22%7D,%22spec%22:%7B%22nodename%22:%22k8s-worker-01)"}}
 creationTimestamp: "2021-06-30T15:34:22Z"
 generation: 1
 name: k8s-worker-1
@@ -162,7 +168,7 @@ selfLink: ""
 
 ## Running the controller-manager on a pod in your K8s cluster
 
-**Step 11:** Login into [Docker.io](http://docker.io) as you will need to get the controller image stored in vkubeviewer repository.
+**Step 12:** Login into [Docker.io](http://docker.io) as you will need to get the controller image stored in vkubeviewer repository.
 
 ```
 docker login —username dockerID —password 'My_password'
@@ -171,10 +177,10 @@ docker login —username dockerID —password 'My_password'
 Set the environment variable IMG to point at the required image.
 
 ```
-export [IMG=docker.io/vkubeviewer/controller-manager:v3](http://img=docker.io/vkubeviewer/controller-manager:v3)
+export IMG=docker.io/vkubeviewer/controller-manager:latest
 ```
 
-**Step 12:** Create the **namespace** and **secret** used by the controller pod.
+**Step 13:** Create the **namespace** and **secret** used by the controller pod.
 
 ```
 kubectl create ns vkubeviewer-system
@@ -187,17 +193,17 @@ kubectl create secret generic vc-creds-1 \
 --from-literal='GOVMOMI_USERNAME= **Username**' \
 --from-literal='GOVMOMI_PASSWORD=**Password**' \
 --from-literal='GOVMOMI_URL=192.168.0.100' \
--n fcdinfo-system
-secret/vc-creds created
+-n vkubeviewer-system
+[output]secret/vc-creds-1 created
 ```
 
-**Step13:** Create the deployment with 1 replica set which ensures that the controller pod keeps running. run:
+**Step14:** Create the deployment with 1 replica set which ensures that the controller pod keeps running. run:
 
 ```
 make deploy
 ```
 
-**Step 14:** Check the pod is running fine with both the containers in ready and running state.
+**Step 15:** Check the pod is running fine with both the containers in ready and running state.
 
 ```
 kubectl get pods -n vkubeviewer-system
@@ -206,18 +212,17 @@ NAME                                          READY   STATUS    RESTARTS   AGE
 vkubeviewer-controller-manager-566c6fffdb-fxjr2   2/2     Running   0          2m39s
 ```
 
-**Step 15:** Re-apply the sample YAMLs for the custom resources to be monitored by the above pod. 
+**Step 16:** Re-apply the sample YAMLs for the custom resources to be monitored by the above pod. 
 
 ```
-cd config/samples
-kubectl apply -f .
+kustomize build config/samples | kubectl create -f -
 ```
 
-**Step 16:** Finally, we can run the below command to see the required fields in the status field of the CRDs.
+**Step 17:** Finally, we can run the below command to see the required fields in the status field of the CRDs.
 
 ```
 kubectl get hostinfo -o yaml
-kubectl get vminfo -o yaml
+kubectl get nodeinfo -o yaml
 kubectl get fcdinfo -o yaml
 ```
 
@@ -250,11 +255,12 @@ metadata:
   selfLink: ""
 ```
 
-### Step 17: Clean Up.
+### Step 18: Clean Up.
 
 Remove the CRDs
 
 ```
+kustomize build config/samples | kubectl delete -f -
 make uninstall
 ```
 
@@ -263,7 +269,3 @@ Remove the deployment and related namespace and secret
 ```
 make undeploy
 ```
-
-### If you face any problems please open a new issue in the Issues tab for us to review.
-
-## Thank you.

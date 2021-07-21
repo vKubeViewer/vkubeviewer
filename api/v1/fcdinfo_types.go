@@ -38,6 +38,9 @@ type FCDInfoStatus struct {
 // +kubebuilder:validation:Optional
 // +kubebuilder:resource:shortName={"fcd"}
 // +kubebuilder:printcolumn:name="PVId",type=string,JSONPath=`.spec.pvId`
+// +kubebuilder:printcolumn:name="SizeMB",type=string,JSONPath=`.status.sizeMB`
+// +kubebuilder:printcolumn:name="FilePath",type=string,JSONPath=`.status.filePath`
+// +kubebuilder:printcolumn:name="ProvisioningType",type=string,JSONPath=`.status.provisioningType`
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 

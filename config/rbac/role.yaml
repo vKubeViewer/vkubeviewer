@@ -9,6 +9,32 @@ rules:
 - apiGroups:
   - topology.vkubeviewer.com
   resources:
+  - datastoreinfoes
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - topology.vkubeviewer.com
+  resources:
+  - datastoreinfoes/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - topology.vkubeviewer.com
+  resources:
+  - datastoreinfoes/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - topology.vkubeviewer.com
+  resources:
   - fcdinfoes
   verbs:
   - create
@@ -61,7 +87,7 @@ rules:
 - apiGroups:
   - topology.vkubeviewer.com
   resources:
-  - nodenetinfoes
+  - nodeinfoes
   verbs:
   - create
   - delete
@@ -73,13 +99,13 @@ rules:
 - apiGroups:
   - topology.vkubeviewer.com
   resources:
-  - nodenetinfoes/finalizers
+  - nodeinfoes/finalizers
   verbs:
   - update
 - apiGroups:
   - topology.vkubeviewer.com
   resources:
-  - nodenetinfoes/status
+  - nodeinfoes/status
   verbs:
   - get
   - patch
@@ -87,7 +113,7 @@ rules:
 - apiGroups:
   - topology.vkubeviewer.com
   resources:
-  - vminfoes
+  - taginfoes
   verbs:
   - create
   - delete
@@ -99,13 +125,13 @@ rules:
 - apiGroups:
   - topology.vkubeviewer.com
   resources:
-  - vminfoes/finalizers
+  - taginfoes/finalizers
   verbs:
   - update
 - apiGroups:
   - topology.vkubeviewer.com
   resources:
-  - vminfoes/status
+  - taginfoes/status
   verbs:
   - get
   - patch

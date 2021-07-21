@@ -19,9 +19,9 @@ package controllers
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/go-logr/logr"
-	"github.com/vmware/govmomi"
 	"github.com/vmware/govmomi/find"
 	"github.com/vmware/govmomi/property"
 	"github.com/vmware/govmomi/vim25"
@@ -39,8 +39,7 @@ import (
 // FCDInfoReconciler reconciles a FCDInfo object
 type FCDInfoReconciler struct {
 	client.Client
-	VC1    *vim25.Client
-	VC2    *govmomi.Client
+	VC     *vim25.Client
 	Finder *find.Finder
 	Log    logr.Logger
 	Scheme *runtime.Scheme
@@ -58,12 +57,16 @@ type FCDInfoReconciler struct {
 // the user.
 //
 // For more details, check Reconcile and its Result here:
-// - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.7.2/pkg/reconcile
+// - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.8.3/pkg/reconcile
 func (r *FCDInfoReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	ctx = context.Background()
+	// ------------
+	// Log Session
+	// ------------
 	log := r.Log.WithValues("FCDInfo", req.NamespacedName)
-
 	fcd := &topologyv1.FCDInfo{}
+
+	// Log Output for failure
 	if err := r.Client.Get(ctx, req.NamespacedName, fcd); err != nil {
 		if !k8serr.IsNotFound(err) {
 			log.Error(err, "unable to fetch FCDInfo")
@@ -71,35 +74,37 @@ func (r *FCDInfoReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
+	// Log Output for sucess
 	msg := fmt.Sprintf("received reconcile request for %q (namespace: %q)", fcd.GetName(), fcd.GetNamespace())
 	log.Info(msg)
 
-	//
-	// Find the datastores available on this vSphere Infrastructure
-	//
+	// ------------
+	// Retrieve Session
+	// ------------
 
+	// Find the datastores available on this vSphere Infrastructure
+
+	// dss - datastores
 	dss, err := r.Finder.DatastoreList(ctx, "*")
+
 	if err != nil {
 		log.Error(err, "FCDInfo: Could not get datastore list")
 		return ctrl.Result{}, err
 	} else {
+		// find list of datastore
 		msg := fmt.Sprintf("FCDInfo: Number of datastores found - %v", len(dss))
 		log.Info(msg)
 
-		pc := property.DefaultCollector(r.VC2.Client)
-		//
+		pc := property.DefaultCollector(r.VC)
+
 		// "finder" only lists - to get really detailed info,
 		// Convert datastores into list of references
-		//
 		var refs []types.ManagedObjectReference
 		for _, ds := range dss {
 			refs = append(refs, ds.Reference())
 		}
 
-		//
 		// Retrieve name property for all datastore
-		//
-
 		var dst []mo.Datastore
 		err = pc.Retrieve(ctx, refs, []string{"name"}, &dst)
 		if err != nil {
@@ -107,43 +112,46 @@ func (r *FCDInfoReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 			return ctrl.Result{}, err
 		}
 
-		m := vslm.NewObjectManager(r.VC1)
+		m := vslm.NewObjectManager(r.VC)
 
-		//
 		// -- Display the FCDs on each datastore (held in array dst)
-		//
 
 		var objids []types.ID
 		var idinfo *types.VStorageObject
 
 		for _, newds := range dst {
 			objids, err = m.List(ctx, newds)
-			//
+			if err != nil {
+				msg := fmt.Sprintf("unable to list types.ID  : error %s", err)
+				log.Info(msg)
+				return ctrl.Result{}, err
+			}
 			// -- With the list of FCD Ids, we can get further information about the FCD retrievec in VStorageObject
-			//
 			for _, id := range objids {
 				idinfo, err = m.Retrieve(ctx, newds, id.Id)
-				//
+				if err != nil {
+					msg := fmt.Sprintf("unable to Retrieve VStorageObject information : error %s", err)
+					log.Info(msg)
+					return ctrl.Result{}, err
+				}
 				// -- Note the TKGS Guest Clusters have a different PV ID
 				// -- to the one that is created for them in the Supervisor
 				// -- This only works for the Supervisor PV ID
-				//
 				if idinfo.Config.BaseConfigInfo.Name == fcd.Spec.PVId {
 					msg := fmt.Sprintf("FCDInfo: %v matches %v", idinfo.Config.BaseConfigInfo.Name, fcd.Spec.PVId)
 					log.Info(msg)
 
+					// store information into FCDInfo's status
 					fcd.Status.SizeMB = int64(idinfo.Config.CapacityInMB)
-
 					backing := idinfo.Config.BaseConfigInfo.Backing.(*types.BaseConfigInfoDiskFileBackingInfo)
 					fcd.Status.FilePath = string(backing.FilePath)
 					fcd.Status.ProvisioningType = string(backing.ProvisioningType)
 				}
-				// else {
-				// 	msg := fmt.Sprintf("FCDInfo: %v does not match %v", idinfo.Config.BaseConfigInfo.Name, fcd.Spec.PVId)
-				// 	log.Info(msg)
-				// }
 			}
 		}
+		// ------------
+		// Update Session
+		// ------------
 
 		if err := r.Status().Update(ctx, fcd); err != nil {
 			log.Error(err, "unable to update FCDInfo status")
@@ -151,7 +159,7 @@ func (r *FCDInfoReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		}
 	}
 
-	return ctrl.Result{}, nil
+	return ctrl.Result{RequeueAfter: time.Duration(1) * time.Minute}, nil
 }
 
 // SetupWithManager sets up the controller with the Manager.
