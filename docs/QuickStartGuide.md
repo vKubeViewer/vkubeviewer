@@ -12,6 +12,7 @@
 - Access to a Container Image Repository (docker.io, quay.io, harbor)
 - Make binary  → `sudo apt install make`
 
+
 **Step 2 :** Get the **vKubeViewer** operator to your desktop
 
 ```
@@ -263,9 +264,3 @@ Remove the deployment and related namespace and secret
 ```
 make undeploy
 ```
-
-
-### If you face any problems, please open a new issue in the Issues tab for us to review.
-
-## Thank you.
-
