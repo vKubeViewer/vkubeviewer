@@ -1,14 +1,14 @@
 # vKubeViewer In-Depth Guide
  
-This document contains a Kubernetes Operator that uses VMware's **Govmomi** to return some simple ESXi host information through the status fields of a **Custom Resource (CR)**, which are called HostInfo, NodeInfo, FCDInfo etc... This will require us to extend Kubernetes with a new **Custom Resource Definition (CRD)**. The code shown is one way in which a Kubernetes controller/operator can access the underlying vSphere infrastructure for the purposes of querying resources.
+This document contains a Kubernetes Operator that uses VMware's **Govmomi** to return some simple ESXi host information through the status fields of a **Custom Resource (CR)**, which are called [HostInfo](https://github.com/vKubeViewer/vkubeviewer/blob/Richard/docs/Host%20Information.md), [NodeInfo](https://github.com/vKubeViewer/vkubeviewer/blob/Richard/docs/Node%20Information.md), [FCDInfo](https://github.com/vKubeViewer/vkubeviewer/blob/Richard/docs/First%20Class%20Disk%20Information.md) etc... This will require us to extend Kubernetes with a new **Custom Resource Definition (CRD)**. The code shown is one way in which a Kubernetes controller/operator can access the underlying vSphere infrastructure for the purposes of querying resources.
 
 You can think of a CRD as representing the desired state of a Kubernetes object or Custom Resource, and the function of the operator is to run the logic or code to make that desired state happen - in other words the operator has the logic to do whatever is necessary to achieve the object's desired state.
 
 ## **What are we building here?**
 
-We will create a few CRDs called HostInfo, NodeInfo, FCDInfo etc... For instance, HostInfo will contain the name of an ESXi host in its specification. When a Custom Resource (CR) is created and subsequently queried, we will call an operator (logic in a controller) whereby the Total CPU and Free CPU from the ESXi host will be returned via the status fields of the object through Govmomi API calls.
+We will create a few CRDs called [HostInfo](https://github.com/vKubeViewer/vkubeviewer/blob/Richard/docs/Host%20Information.md), [NodeInfo](https://github.com/vKubeViewer/vkubeviewer/blob/Richard/docs/Node%20Information.md), [FCDInfo](https://github.com/vKubeViewer/vkubeviewer/blob/Richard/docs/First%20Class%20Disk%20Information.md) etc... For instance, [HostInfo](https://github.com/vKubeViewer/vkubeviewer/blob/Richard/docs/Host%20Information.md) will contain the name of an ESXi host in its specification. When a Custom Resource (CR) is created and subsequently queried, we will call an operator (logic in a controller) whereby the Total CPU and Free CPU from the ESXi host will be returned via the status fields of the object through Govmomi API calls.
 
-In this document, we will talk about the initial stages of the operator which runs with 3 CRDs namely  HostInfo, NodeInfo and FCDInfo. However, we intend to populate it with more in the future.
+In this document, we will talk about the initial stages of the operator which runs with 3 CRDs namely  [HostInfo](https://github.com/vKubeViewer/vkubeviewer/blob/Richard/docs/Host%20Information.md), [NodeInfo](https://github.com/vKubeViewer/vkubeviewer/blob/Richard/docs/Node%20Information.md) and [FCDInfo](https://github.com/vKubeViewer/vkubeviewer/blob/Richard/docs/First%20Class%20Disk%20Information.md). However, we intend to populate it with more in the future.
 
 # Operator Development Steps
 
@@ -52,7 +52,7 @@ Now we can proceed with building out the rest of the directory structure. The fo
 kubebuilder init —domain vkubeviewer.com
 ```
 
-Next, we must define a resource. To do that, we again use kubebuilder to create the resource, specifying the API group, its version and supported kind. Our group is called topology, and kind is called HostInfo, VMinfo, FCDInfo and our initial version is v1.
+Next, we must define a resource. To do that, we again use kubebuilder to create the resource, specifying the API group, its version and supported kind. Our group is called topology, and kind is called [HostInfo](https://github.com/vKubeViewer/vkubeviewer/blob/Richard/api/v1/hostinfo_types.go), [NodeInfo](https://github.com/vKubeViewer/vkubeviewer/blob/Richard/api/v1/nodeinfo_types.go), [FCDInfo](https://github.com/vKubeViewer/vkubeviewer/blob/Richard/api/v1/fcdinfo_types.go) and our initial version is v1.
 
 ```
 kubebuilder create api --group topology --version v1 --kind HostInfo --resource=true --controller=true
@@ -119,7 +119,7 @@ This CRD_OPTIONS entry should be changed to the following:
 CRD_OPTIONS ?= "crd:preserveUnknownFields=false,crdVersions=v1,trivialVersions=true"
 ```
 
-Now we can build our CRDs with the spec and status fields that we have place in the **api/v1/**types.go** files.
+Now we can build our CRDs with the spec and status fields that we have place in the [api/v1/**.go**](https://github.com/vKubeViewer/vkubeviewer/tree/Richard/api/v1) files.
 
 ```
 make manifests && make generate
