@@ -12,17 +12,17 @@
 - Access to a Container Image Repository (docker.io, quay.io, harbor)
 - Make binary  → `sudo apt install make`
 
- Richard
+
 **Step: 1.1:** Run the below shell script to import the required go and govimomi packages :
 
 ```
 ./ go-pack.sh
+```
 **Step 2 :** Get the **vKubeViewer** operator to your desktop
 
 ```
 git clone https://github.com/vKubeViewer/vkubeviewer.git
 cd vkubeviewer
-main
 ```
 
 **Step 3:** Run the below script to get required go and govmomi packages
