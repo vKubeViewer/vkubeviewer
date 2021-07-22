@@ -3,4 +3,9 @@ This document contains infoamtion on the [Host Information](https://github.com/v
 
 # Host Infomation 
 
-## Infomation that will be retrived 
+## Retrievable Infomation 
+
+- Total CPU capacity of the host
+- Remaining available CPU capacity of the host
+- Total Memory capacity of the host 
+- Remaining available Memory capacity of the host
