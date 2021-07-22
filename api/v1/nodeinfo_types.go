@@ -55,6 +55,7 @@ type NodeInfoStatus struct {
 // +kubebuilder:printcolumn:name="VMTotalMem",type=string,JSONPath=`.status.vm_total_mem`
 // +kubebuilder:printcolumn:name="VMPowerState",type=string,JSONPath=`.status.vm_power_state`
 // +kubebuilder:printcolumn:name="VMIpAddress",type=string,JSONPath=`.status.vm_ip_address`
+// +kubebuilder:printcolumn:name="VMHwVersion",type=string,JSONPath=`.status.vm_hw_version`
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 
