@@ -21,6 +21,8 @@ The key problem for this project is that Kubernetes has no visibility on the und
 
 ## Guides
 
+[Advanced Guide](https://github.com/vKubeViewer/vkubeviewer/blob/Richard/docs/vKubeViewer%20Guide.md) 
+
 [Quick-Start Guide](https://github.com/vKubeViewer/vkubeviewer/blob/Richard/docs/QuickStartGuide.md) 
 
 
