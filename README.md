@@ -1,4 +1,4 @@
-# vKubeViewer
+# vKubeViewer Advanced Guide
 
 ## About the vKubeViewer project
 
