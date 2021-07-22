@@ -13,11 +13,6 @@
 - Make binary  → `sudo apt install make`
 
 
-**Step: 1.1:** Run the below shell script to import the required go and govimomi packages :
-
-```
-./ go-pack.sh
-```
 **Step 2 :** Get the **vKubeViewer** operator to your desktop
 
 ```
