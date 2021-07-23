@@ -94,10 +94,10 @@ func (r *HostInfoReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 
 	// Retrieve summary property for all hosts
 	var hss []mo.HostSystem
-	err = v.Retrieve(ctx, []string{"HostSystem"}, []string{"summary"}, &hss)
+	err = v.Retrieve(ctx, []string{"HostSystem"}, nil, &hss)
 
 	if err != nil {
-		msg := fmt.Sprintf("unable to retrieve HostSystem summary: error %s", err)
+		msg := fmt.Sprintf("unable to retrieve HostSystem: error %s", err)
 		log.Info(msg)
 		return ctrl.Result{
 			RequeueAfter: time.Duration(1) * time.Minute}, err
@@ -110,6 +110,8 @@ func (r *HostInfoReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 			hi.Status.FreeCPU = (int64(hs.Summary.Hardware.CpuMhz) * int64(hs.Summary.Hardware.NumCpuCores)) - int64(hs.Summary.QuickStats.OverallCpuUsage)
 			hi.Status.TotalMemory = ByteCountIEC(hs.Summary.Hardware.MemorySize)
 			hi.Status.FreeMemory = ByteCountIEC(int64(hs.Summary.Hardware.MemorySize) - (int64(hs.Summary.QuickStats.OverallMemoryUsage) * 1024 * 1024))
+			hi.Status.InMaintenanceMode = hs.Runtime.InMaintenanceMode
+
 			// get the storage info through datastore
 			var dss []mo.Datastore
 			pc := property.DefaultCollector(r.VC)
@@ -128,6 +130,7 @@ func (r *HostInfoReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 
 			hi.Status.TotalStorage = ByteCountIEC(totalstorage)
 			hi.Status.FreeStorage = ByteCountIEC(freestorage)
+
 		}
 	}
 
