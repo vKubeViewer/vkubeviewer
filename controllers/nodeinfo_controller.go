@@ -147,6 +147,18 @@ func (r *NodeInfoReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 			node.Status.VMIpAddress = string(vm.Summary.Guest.IpAddress)
 			node.Status.PathToVM = string(vm.Summary.Config.VmPathName)
 
+			hostref := vm.Runtime.Host
+			pc := property.DefaultCollector(r.VC_vim25)
+			var host mo.HostSystem
+			err = pc.RetrieveOne(ctx, *hostref, []string{"name"}, &host)
+			if err != nil {
+				msg = fmt.Sprintf("unable to retrieve RelatedHost: error %s", err)
+				log.Info(msg)
+				return ctrl.Result{}, err
+			}
+
+			node.Status.RelatedHost = host.Name
+
 			// traverse the network, in our operator, we consider only single network
 			for _, ref := range vm.Network {
 				if ref.Type == "Network" {
@@ -155,7 +167,6 @@ func (r *NodeInfoReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 					node.Status.NetSwitchType = "Standard"
 
 					// a property collector to retrieve objects by MOR
-					pc := property.DefaultCollector(r.VC_vim25)
 					err = pc.Retrieve(ctx, vm.Network, nil, &n)
 					if err != nil {
 						msg = fmt.Sprintf("unable to retrieve VM Network: error %s", err)
@@ -173,7 +184,6 @@ func (r *NodeInfoReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 					node.Status.NetSwitchType = "Distributed"
 
 					// a property collector to retrieve objects by MOR
-					pc := property.DefaultCollector(r.VC_vim25)
 					err = pc.Retrieve(ctx, vm.Network, nil, &pg)
 					if err != nil {
 						msg = fmt.Sprintf("unable to retrieve VM DVPortGroup: error %s", err)

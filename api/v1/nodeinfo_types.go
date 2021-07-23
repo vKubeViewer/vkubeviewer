@@ -46,6 +46,8 @@ type NodeInfoStatus struct {
 	NetOverallStatus string `json:"net_overall_status,omitempty"`
 	NetSwitchType    string `json:"net_switch_type,omitempty"`
 	NetVlanId        int32  `json:"net_vlan_id,omitempty"`
+	RelatedCluster   string `json:"related_cluster,omitempty"`
+	RelatedHost      string `json:"related_host,omitempty"`
 }
 
 // +kubebuilder:validation:Optional
