@@ -23,3 +23,5 @@ go get github.com/vmware/govmomi/session/cache
 go get github.com/vmware/govmomi/vim25/soap
 
 go get k8s.io/apimachinery/pkg/util/uuid@v0.20.2
+
+sudo apt install make
