@@ -30,12 +30,13 @@ type HostInfoSpec struct {
 
 // HostInfoStatus defines the observed state of HostInfo
 type HostInfoStatus struct {
-	TotalCPU     int64  `json:"total_cpu,omitempty"`
-	FreeCPU      int64  `json:"free_cpu,omitempty"`
-	TotalMemory  string `json:"total_memory,omitempty"`
-	FreeMemory   string `json:"free_memory,omitempty"`
-	TotalStorage string `json:"total_storage,omitempty"`
-	FreeStorage  string `json:"free_storage,omitempty"`
+	TotalCPU          int64  `json:"total_cpu,omitempty"`
+	FreeCPU           int64  `json:"free_cpu,omitempty"`
+	TotalMemory       string `json:"total_memory,omitempty"`
+	FreeMemory        string `json:"free_memory,omitempty"`
+	TotalStorage      string `json:"total_storage,omitempty"`
+	FreeStorage       string `json:"free_storage,omitempty"`
+	InMaintenanceMode bool   `json:"in_maintenance_mode"`
 }
 
 // +kubebuilder:validation:Optional
@@ -45,6 +46,7 @@ type HostInfoStatus struct {
 // +kubebuilder:printcolumn:name="FreeCPU",type=string,JSONPath=`.status.free_cpu`
 // +kubebuilder:printcolumn:name="TotalMemory",type=string,JSONPath=`.status.total_memory`
 // +kubebuilder:printcolumn:name="FreeMemory",type=string,JSONPath=`.status.free_memory`
+// +kubebuilder:printcolumn:name="InMaintenanceMode",type=string,JSONPath=`.status.in_maintenance_mode`
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 
