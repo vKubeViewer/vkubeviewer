@@ -379,25 +379,25 @@ func main() {
 
 	}
 
-	// err = createDatastoreInfo(ctx, mgr, vim25client)
-	// if err != nil {
-	// 	setupLog.Error(err, "Manager: Could not create DatastorInfo")
-	// }
+	err = createDatastoreInfo(ctx, mgr, vim25client)
+	if err != nil {
+		setupLog.Error(err, "Manager: Could not create DatastorInfo")
+	}
 
-	// err = createHostInfo(ctx, mgr, vim25client)
-	// if err != nil {
-	// 	setupLog.Error(err, "Manager: Could not create HostInfo")
-	// }
+	err = createHostInfo(ctx, mgr, vim25client)
+	if err != nil {
+		setupLog.Error(err, "Manager: Could not create HostInfo")
+	}
 
 	err = createNodeInfo(ctx, mgr, vim25client)
 	if err != nil {
 		setupLog.Error(err, "Manager: Could not create NodeInfo")
 	}
 
-	// err = createTagInfo(ctx, mgr, restclient)
-	// if err != nil {
-	// 	setupLog.Error(err, "Manager: Could not create TagInfo")
-	// }
+	err = createTagInfo(ctx, mgr, restclient)
+	if err != nil {
+		setupLog.Error(err, "Manager: Could not create TagInfo")
+	}
 
 	err = createFCDInfo(ctx, mgr, vim25client)
 	if err != nil {
@@ -427,35 +427,35 @@ func main() {
 		os.Exit(1)
 	}
 
-	// if err = (&controllers.HostInfoReconciler{
-	// 	Client: mgr.GetClient(),
-	// 	VC:     vim25client,
-	// 	Log:    ctrl.Log.WithName("controllers").WithName("HostInfo"),
-	// 	Scheme: mgr.GetScheme(),
-	// }).SetupWithManager(mgr); err != nil {
-	// 	setupLog.Error(err, "unable to create controller", "controller", "HostInfo")
-	// 	os.Exit(1)
-	// }
+	if err = (&controllers.HostInfoReconciler{
+		Client: mgr.GetClient(),
+		VC:     vim25client,
+		Log:    ctrl.Log.WithName("controllers").WithName("HostInfo"),
+		Scheme: mgr.GetScheme(),
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "HostInfo")
+		os.Exit(1)
+	}
 
-	// if err = (&controllers.DatastoreInfoReconciler{
-	// 	Client: mgr.GetClient(),
-	// 	VC:     vim25client,
-	// 	Log:    ctrl.Log.WithName("controllers").WithName("DatastoreInfo"),
-	// 	Scheme: mgr.GetScheme(),
-	// }).SetupWithManager(mgr); err != nil {
-	// 	setupLog.Error(err, "unable to create controller", "controller", "DatastoreInfo")
-	// 	os.Exit(1)
-	// }
-	// if err = (&controllers.TagInfoReconciler{
-	// 	Client:   mgr.GetClient(),
-	// 	VC_vim25: vim25client,
-	// 	VC_rest:  restclient,
-	// 	Log:      ctrl.Log.WithName("controllers").WithName("TagInfo"),
-	// 	Scheme:   mgr.GetScheme(),
-	// }).SetupWithManager(mgr); err != nil {
-	// 	setupLog.Error(err, "unable to create controller", "controller", "TagInfo")
-	// 	os.Exit(1)
-	// }
+	if err = (&controllers.DatastoreInfoReconciler{
+		Client: mgr.GetClient(),
+		VC:     vim25client,
+		Log:    ctrl.Log.WithName("controllers").WithName("DatastoreInfo"),
+		Scheme: mgr.GetScheme(),
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "DatastoreInfo")
+		os.Exit(1)
+	}
+	if err = (&controllers.TagInfoReconciler{
+		Client:   mgr.GetClient(),
+		VC_vim25: vim25client,
+		VC_rest:  restclient,
+		Log:      ctrl.Log.WithName("controllers").WithName("TagInfo"),
+		Scheme:   mgr.GetScheme(),
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "TagInfo")
+		os.Exit(1)
+	}
 	//+kubebuilder:scaffold:builder
 
 	if err := mgr.AddHealthzCheck("healthz", healthz.Ping); err != nil {

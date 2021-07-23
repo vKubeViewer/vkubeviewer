@@ -80,8 +80,11 @@ func (r *FCDInfoReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 	// ------------
 	// Retrieve Session
 	// ------------
+
+	// connect to the vslm client
 	vslmClient, _ := vslm.NewClient(ctx, r.VC)
 
+	// retrieve vstorageID
 	m := vslm.NewGlobalObjectManager(vslmClient)
 	var query []vslmtypes.VslmVsoVStorageObjectQuerySpec
 	var k8spv = ListK8sPV()
@@ -99,6 +102,7 @@ func (r *FCDInfoReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 
 	var vstorageobject *types.VStorageObject
 
+	// retrieve vstorage objects
 	for _, vstorageID := range vstorageIDs {
 		vstorageobject, _ = m.Retrieve(ctx, vstorageID)
 
@@ -111,52 +115,15 @@ func (r *FCDInfoReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 			backing := vstorageobject.Config.BaseConfigInfo.Backing.(*types.BaseConfigInfoDiskFileBackingInfo)
 			fcd.Status.FilePath = string(backing.FilePath)
 			fcd.Status.ProvisioningType = string(backing.ProvisioningType)
-
 		}
+	}
 
-		// // -- Display the FCDs on each datastore (held in array dst)
-
-		// 	var objids []types.ID
-		// 	var idinfo *types.VStorageObject
-
-		// 	for _, newds := range dst {
-		// 		objids, err = m.List(ctx, newds)
-		// 		if err != nil {
-		// 			msg := fmt.Sprintf("unable to list types.ID  : error %s", err)
-		// 			log.Info(msg)
-		// 			return ctrl.Result{}, err
-		// 		}
-		// 		// -- With the list of FCD Ids, we can get further information about the FCD retrievec in VStorageObject
-		// 		for _, id := range objids {
-		// 			idinfo, err = m.Retrieve(ctx, newds, id.Id)
-		// 			if err != nil {
-		// 				msg := fmt.Sprintf("unable to Retrieve VStorageObject information : error %s", err)
-		// 				log.Info(msg)
-		// 				return ctrl.Result{}, err
-		// 			}
-		// 			// -- Note the TKGS Guest Clusters have a different PV ID
-		// 			// -- to the one that is created for them in the Supervisor
-		// 			// -- This only works for the Supervisor PV ID
-		// 			if idinfo.Config.BaseConfigInfo.Name == fcd.Spec.PVId {
-		// 				msg := fmt.Sprintf("FCDInfo: %v matches %v", idinfo.Config.BaseConfigInfo.Name, fcd.Spec.PVId)
-		// 				log.Info(msg)
-
-		// 				// store information into FCDInfo's status
-		// 				fcd.Status.SizeMB = int64(idinfo.Config.CapacityInMB)
-		// 				backing := idinfo.Config.BaseConfigInfo.Backing.(*types.BaseConfigInfoDiskFileBackingInfo)
-		// 				fcd.Status.FilePath = string(backing.FilePath)
-		// 				fcd.Status.ProvisioningType = string(backing.ProvisioningType)
-		// 			}
-		// 		}
-		// 	}
-		// ------------
-		// Update Session
-		// ------------
-
-		if err := r.Status().Update(ctx, fcd); err != nil {
-			log.Error(err, "unable to update FCDInfo status")
-			return ctrl.Result{}, err
-		}
+	// ------------
+	// Update Session
+	// ------------
+	if err := r.Status().Update(ctx, fcd); err != nil {
+		log.Error(err, "unable to update FCDInfo status")
+		return ctrl.Result{}, err
 	}
 
 	return ctrl.Result{RequeueAfter: time.Duration(1) * time.Minute}, nil
