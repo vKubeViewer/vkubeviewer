@@ -110,7 +110,6 @@ func (r *HostInfoReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 			hi.Status.FreeCPU = (int64(hs.Summary.Hardware.CpuMhz) * int64(hs.Summary.Hardware.NumCpuCores)) - int64(hs.Summary.QuickStats.OverallCpuUsage)
 			hi.Status.TotalMemory = ByteCountIEC(hs.Summary.Hardware.MemorySize)
 			hi.Status.FreeMemory = ByteCountIEC(int64(hs.Summary.Hardware.MemorySize) - (int64(hs.Summary.QuickStats.OverallMemoryUsage) * 1024 * 1024))
-			fmt.Println("InMaintenanceMode", hs.Runtime.InMaintenanceMode)
 			hi.Status.InMaintenanceMode = hs.Runtime.InMaintenanceMode
 
 			// get the storage info through datastore

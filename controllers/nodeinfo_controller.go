@@ -147,10 +147,11 @@ func (r *NodeInfoReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 			node.Status.VMIpAddress = string(vm.Summary.Guest.IpAddress)
 			node.Status.PathToVM = string(vm.Summary.Config.VmPathName)
 
+			// retrieve related host info
 			hostref := vm.Runtime.Host
 			pc := property.DefaultCollector(r.VC_vim25)
 			var host mo.HostSystem
-			err = pc.RetrieveOne(ctx, *hostref, []string{"name"}, &host)
+			err = pc.RetrieveOne(ctx, *hostref, []string{"name", "parent"}, &host)
 			if err != nil {
 				msg = fmt.Sprintf("unable to retrieve RelatedHost: error %s", err)
 				log.Info(msg)
@@ -158,6 +159,19 @@ func (r *NodeInfoReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 			}
 
 			node.Status.RelatedHost = host.Name
+
+			// retrieve related cluster info
+			clusterref := host.Parent
+			pc = property.DefaultCollector(r.VC_vim25)
+			var clustercomputeresource mo.ClusterComputeResource
+			err = pc.RetrieveOne(ctx, *clusterref, []string{"name"}, &clustercomputeresource)
+			if err != nil {
+				msg = fmt.Sprintf("unable to retrieve RelatedHost: error %s", err)
+				log.Info(msg)
+				return ctrl.Result{}, err
+			}
+
+			node.Status.RelatedCluster = clustercomputeresource.Name
 
 			// traverse the network, in our operator, we consider only single network
 			for _, ref := range vm.Network {

@@ -37,6 +37,9 @@ spec:
     - jsonPath: .status.vm_hw_version
       name: VMHwVersion
       type: string
+    - jsonPath: .status.related_cluster
+      name: Cluster
+      type: string
     - jsonPath: .status.related_host
       name: Host
       type: string
@@ -81,6 +84,8 @@ spec:
                 format: int32
                 type: integer
               path_to_vm:
+                type: string
+              related_cluster:
                 type: string
               related_host:
                 type: string
