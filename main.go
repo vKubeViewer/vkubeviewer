@@ -36,8 +36,6 @@ import (
 	"github.com/vmware/govmomi/vim25"
 	"github.com/vmware/govmomi/vim25/mo"
 	"github.com/vmware/govmomi/vim25/soap"
-	"github.com/vmware/govmomi/vim25/types"
-	"github.com/vmware/govmomi/vslm"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 
@@ -66,6 +64,7 @@ func init() {
 	//+kubebuilder:scaffold:scheme
 }
 
+// createDatastoreInfo creates DatastoreInfo CR in current k8s cluster
 func createDatastoreInfo(ctx context.Context, mgr manager.Manager, vim25client *vim25.Client) error {
 	m := view.NewManager(vim25client)
 	vds, err := m.CreateContainerView(ctx, vim25client.ServiceContent.RootFolder, []string{"Datastore"}, true)
@@ -115,61 +114,13 @@ func createDatastoreInfo(ctx context.Context, mgr manager.Manager, vim25client *
 	return err
 }
 
+// createFCDInfo creates FCDInfo CR in current k8s cluster
 func createFCDInfo(ctx context.Context, mgr manager.Manager, vim25client *vim25.Client) error {
-	m := view.NewManager(vim25client)
-	vds, err := m.CreateContainerView(ctx, vim25client.ServiceContent.RootFolder, []string{"Datastore"}, true)
-	if err != nil {
-		msg := fmt.Sprintf("unable to create container view for Datastore: error %s", err)
-		setupLog.Info(msg)
-	} else {
-		msg := fmt.Sprintf("succeed to create container view for Datastore")
-		setupLog.Info(msg)
-	}
-	defer vds.Destroy(ctx)
-
-	var dss []mo.Datastore
-
-	err = vds.Retrieve(ctx, []string{"Datastore"}, nil, &dss)
-	if err != nil {
-		msg := fmt.Sprintf("unable to retrieve Datastore info: error %s", err)
-		setupLog.Info(msg)
-	} else {
-		msg := fmt.Sprintf("succeed to retrieve Datastore info")
-		setupLog.Info(msg)
-	}
-
-	vslmmanager := vslm.NewObjectManager(vim25client)
-
-	var objids []types.ID
-	var idinfo *types.VStorageObject
-	var curFCDinfo []string
-
-	for _, newds := range dss {
-		objids, err = vslmmanager.List(ctx, newds)
-		if err != nil {
-			msg := fmt.Sprintf("unable to list types.ID  : error %s", err)
-			setupLog.Info(msg)
-			return err
-		}
-
-		for _, id := range objids {
-			idinfo, err = vslmmanager.Retrieve(ctx, newds, id.Id)
-			if err != nil {
-				msg := fmt.Sprintf("unable to Retrieve VStorageObject information : error %s", err)
-				setupLog.Info(msg)
-				return err
-			}
-			curFCDinfo = append(curFCDinfo, idinfo.Config.BaseConfigInfo.Name)
-		}
-	}
-
-	// ------------
-	// Create DatastoreInfo with K8s CRD
-	// ------------
-
+	var k8spv = controllers.ListK8sPV()
+	var err error
 	c := mgr.GetClient()
-
-	for index, fcd := range curFCDinfo {
+	fmt.Println(k8spv)
+	for index, fcd := range k8spv {
 		fcdindo := &topologyv1.FCDInfo{
 			TypeMeta:   metav1.TypeMeta{Kind: "FCDInfo", APIVersion: "topology.vkubeviewer.com/v1"},
 			ObjectMeta: metav1.ObjectMeta{Name: "fcd" + strconv.Itoa(index), Namespace: "default"},
@@ -189,6 +140,7 @@ func createFCDInfo(ctx context.Context, mgr manager.Manager, vim25client *vim25.
 	return err
 }
 
+// createHostInfo creates HostInfo CR in current k8s cluster
 func createHostInfo(ctx context.Context, mgr manager.Manager, vim25client *vim25.Client) error {
 	m := view.NewManager(vim25client)
 	vhosts, err := m.CreateContainerView(ctx, vim25client.ServiceContent.RootFolder, []string{"HostSystem"}, true)
@@ -238,6 +190,7 @@ func createHostInfo(ctx context.Context, mgr manager.Manager, vim25client *vim25
 	return err
 }
 
+// createNodeInfo creates NodeInfo CR in current k8s cluster
 func createNodeInfo(ctx context.Context, mgr manager.Manager, vim25client *vim25.Client) error {
 	var k8snodes = controllers.ListK8sNodes()
 
@@ -268,6 +221,7 @@ func createNodeInfo(ctx context.Context, mgr manager.Manager, vim25client *vim25
 	return err
 }
 
+// createTagInfo creates TagInfo CR in current k8s cluster
 func createTagInfo(ctx context.Context, mgr manager.Manager, restclient *rest.Client) error {
 	tm := tags.NewManager(restclient)
 

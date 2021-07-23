@@ -23,11 +23,10 @@ import (
 
 	"github.com/go-logr/logr"
 	"github.com/vmware/govmomi/find"
-	"github.com/vmware/govmomi/property"
 	"github.com/vmware/govmomi/vim25"
-	"github.com/vmware/govmomi/vim25/mo"
 	"github.com/vmware/govmomi/vim25/types"
 	"github.com/vmware/govmomi/vslm"
+	vslmtypes "github.com/vmware/govmomi/vslm/types"
 	k8serr "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -82,81 +81,49 @@ func (r *FCDInfoReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 	// Retrieve Session
 	// ------------
 
-	// Find the datastores available on this vSphere Infrastructure
+	// connect to the vslm client
+	vslmClient, _ := vslm.NewClient(ctx, r.VC)
 
-	// dss - datastores
-	dss, err := r.Finder.DatastoreList(ctx, "*")
+	// retrieve vstorageID
+	m := vslm.NewGlobalObjectManager(vslmClient)
+	var query []vslmtypes.VslmVsoVStorageObjectQuerySpec
+	var k8spv = ListK8sPV()
 
-	if err != nil {
-		log.Error(err, "FCDInfo: Could not get datastore list")
+	for _, pv := range k8spv {
+		spec := vslmtypes.VslmVsoVStorageObjectQuerySpec{
+			QueryField:    "name",
+			QueryOperator: "contains",
+			QueryValue:    []string{pv},
+		}
+		query = append(query, spec)
+	}
+	result, _ := m.ListObjectsForSpec(ctx, query, 1000)
+	vstorageIDs := result.Id
+
+	var vstorageobject *types.VStorageObject
+
+	// retrieve vstorage objects
+	for _, vstorageID := range vstorageIDs {
+		vstorageobject, _ = m.Retrieve(ctx, vstorageID)
+
+		if vstorageobject.Config.BaseConfigInfo.Name == fcd.Spec.PVId {
+			msg := fmt.Sprintf("FCDInfo: %v matches %v", vstorageobject.Config.BaseConfigInfo.Name, fcd.Spec.PVId)
+			log.Info(msg)
+
+			// store information into FCDInfo's status
+			fcd.Status.SizeMB = int64(vstorageobject.Config.CapacityInMB)
+			backing := vstorageobject.Config.BaseConfigInfo.Backing.(*types.BaseConfigInfoDiskFileBackingInfo)
+			fcd.Status.FilePath = string(backing.FilePath)
+			fcd.Status.ProvisioningType = string(backing.ProvisioningType)
+		}
+	}
+
+	// ------------
+	// Update Session
+	// ------------
+	if err := r.Status().Update(ctx, fcd); err != nil {
+		log.Error(err, "unable to update FCDInfo status")
 		return ctrl.Result{}, err
-	} else {
-		// find list of datastore
-		msg := fmt.Sprintf("FCDInfo: Number of datastores found - %v", len(dss))
-		log.Info(msg)
-
-		pc := property.DefaultCollector(r.VC)
-
-		// "finder" only lists - to get really detailed info,
-		// Convert datastores into list of references
-		var refs []types.ManagedObjectReference
-		for _, ds := range dss {
-			refs = append(refs, ds.Reference())
-		}
-
-		// Retrieve name property for all datastore
-		var dst []mo.Datastore
-		err = pc.Retrieve(ctx, refs, []string{"name"}, &dst)
-		if err != nil {
-			log.Error(err, "FCDInfo: Could not get datastore info")
-			return ctrl.Result{}, err
-		}
-
-		m := vslm.NewObjectManager(r.VC)
-
-		// -- Display the FCDs on each datastore (held in array dst)
-
-		var objids []types.ID
-		var idinfo *types.VStorageObject
-
-		for _, newds := range dst {
-			objids, err = m.List(ctx, newds)
-			if err != nil {
-				msg := fmt.Sprintf("unable to list types.ID  : error %s", err)
-				log.Info(msg)
-				return ctrl.Result{}, err
-			}
-			// -- With the list of FCD Ids, we can get further information about the FCD retrievec in VStorageObject
-			for _, id := range objids {
-				idinfo, err = m.Retrieve(ctx, newds, id.Id)
-				if err != nil {
-					msg := fmt.Sprintf("unable to Retrieve VStorageObject information : error %s", err)
-					log.Info(msg)
-					return ctrl.Result{}, err
-				}
-				// -- Note the TKGS Guest Clusters have a different PV ID
-				// -- to the one that is created for them in the Supervisor
-				// -- This only works for the Supervisor PV ID
-				if idinfo.Config.BaseConfigInfo.Name == fcd.Spec.PVId {
-					msg := fmt.Sprintf("FCDInfo: %v matches %v", idinfo.Config.BaseConfigInfo.Name, fcd.Spec.PVId)
-					log.Info(msg)
-
-					// store information into FCDInfo's status
-					fcd.Status.SizeMB = int64(idinfo.Config.CapacityInMB)
-					backing := idinfo.Config.BaseConfigInfo.Backing.(*types.BaseConfigInfoDiskFileBackingInfo)
-					fcd.Status.FilePath = string(backing.FilePath)
-					fcd.Status.ProvisioningType = string(backing.ProvisioningType)
-				}
-			}
-		}
-		// ------------
-		// Update Session
-		// ------------
-
-		if err := r.Status().Update(ctx, fcd); err != nil {
-			log.Error(err, "unable to update FCDInfo status")
-			return ctrl.Result{}, err
-		}
 	}
 
 	return ctrl.Result{RequeueAfter: time.Duration(1) * time.Minute}, nil
