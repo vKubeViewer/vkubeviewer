@@ -89,6 +89,35 @@ func ListK8sNodes() []string {
 	return curK8sNode
 }
 
+func ListK8sPV() []string {
+	var curK8sPV []string
+	var kubeconfig *string
+	path := homedir.HomeDir() + "/.kube/config"
+	kubeconfig = &path
+	config, err := clientcmd.BuildConfigFromFlags("", *kubeconfig)
+
+	if err != nil {
+		panic(err)
+	}
+
+	clientSet, err := kubernetes.NewForConfig(config)
+	if err != nil {
+		panic(err)
+	}
+
+	pvList := clientSet.CoreV1().PersistentVolumes()
+	pv, err := pvList.List(context.TODO(), v1.ListOptions{})
+
+	if err != nil {
+		panic(err)
+	}
+
+	for _, item := range pv.Items {
+		curK8sPV = append(curK8sPV, item.ObjectMeta.Name)
+	}
+	return curK8sPV
+}
+
 // stringInSlice check whether a string is in a slice or not
 func stringInSlice(s string, list []string) bool {
 	for _, ele := range list {

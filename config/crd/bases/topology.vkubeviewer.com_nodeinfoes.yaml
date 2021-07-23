@@ -34,6 +34,9 @@ spec:
     - jsonPath: .status.vm_ip_address
       name: VMIpAddress
       type: string
+    - jsonPath: .status.vm_hw_version
+      name: VMHwVersion
+      type: string
     name: v1
     schema:
       openAPIV3Schema:

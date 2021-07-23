@@ -65,10 +65,14 @@ spec:
                 type: integer
               free_memory:
                 type: string
+              free_storage:
+                type: string
               total_cpu:
                 format: int64
                 type: integer
               total_memory:
+                type: string
+              total_storage:
                 type: string
             type: object
         type: object
