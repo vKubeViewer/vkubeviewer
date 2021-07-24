@@ -48,6 +48,7 @@ type NodeInfoStatus struct {
 	NetVlanId        int32  `json:"net_vlan_id,omitempty"`
 	RelatedCluster   string `json:"related_cluster,omitempty"`
 	RelatedHost      string `json:"related_host,omitempty"`
+	RelatedDatastore []string `json:"related_datastore,omitempty"`
 }
 
 // +kubebuilder:validation:Optional
@@ -60,6 +61,7 @@ type NodeInfoStatus struct {
 // +kubebuilder:printcolumn:name="VMHwVersion",type=string,JSONPath=`.status.vm_hw_version`
 // +kubebuilder:printcolumn:name="Cluster",type=string,JSONPath=`.status.related_cluster`
 // +kubebuilder:printcolumn:name="Host",type=string,JSONPath=`.status.related_host`
+// +kubebuilder:printcolumn:name="Datastore",type=string,JSONPath=`.status.related_datastore`
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 

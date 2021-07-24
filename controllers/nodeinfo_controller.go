@@ -166,12 +166,29 @@ func (r *NodeInfoReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 			var clustercomputeresource mo.ClusterComputeResource
 			err = pc.RetrieveOne(ctx, *clusterref, []string{"name"}, &clustercomputeresource)
 			if err != nil {
-				msg = fmt.Sprintf("unable to retrieve RelatedHost: error %s", err)
+				msg = fmt.Sprintf("unable to retrieve Related Compute Cluster: error %s", err)
 				log.Info(msg)
 				return ctrl.Result{}, err
 			}
 
 			node.Status.RelatedCluster = clustercomputeresource.Name
+
+			// retrive related datastore info
+			datastoreref := vm.Datastore
+			pc = property.DefaultCollector(r.VC_vim25)
+			var datastores []mo.Datastore
+			err = pc.Retrieve(ctx, datastoreref, []string{"name"}, &datastores)
+			if err != nil {
+				msg = fmt.Sprintf("unable to retrieve Related Datastore: error %s", err)
+				log.Info(msg)
+				return ctrl.Result{}, err
+			}
+
+			var curDatastores []string
+			for _, datastore := range datastores {
+				curDatastores = append(curDatastores, datastore.Name)
+			}
+			node.Status.RelatedDatastore = curDatastores
 
 			// traverse the network, in our operator, we consider only single network
 			for _, ref := range vm.Network {
