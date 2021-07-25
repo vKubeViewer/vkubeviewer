@@ -49,7 +49,7 @@ type HostInfoStatus struct {
 
 ## Controller Populates relevent YAML file
 
-Once the API has retrived the requested infomation, this is then passed to the controller where it is sent to the relevent YAML file:
+Once the API has retrived the requested infomation, this is then passed to the [controller](https://github.com/vKubeViewer/vkubeviewer/blob/main/controllers/hostinfo_controller.go) where it is sent to the relevent YAML file for subsiquent output:
 
 ```
 v, err := m.CreateContainerView(ctx, r.VC.ServiceContent.RootFolder, []string{"HostSystem"}, true)
