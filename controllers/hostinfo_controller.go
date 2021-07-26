@@ -22,6 +22,7 @@ import (
 	"time"
 
 	"github.com/go-logr/logr"
+	"github.com/vmware/govmomi/property"
 	"github.com/vmware/govmomi/view"
 	"github.com/vmware/govmomi/vim25"
 	"github.com/vmware/govmomi/vim25/mo"
@@ -93,10 +94,10 @@ func (r *HostInfoReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 
 	// Retrieve summary property for all hosts
 	var hss []mo.HostSystem
-	err = v.Retrieve(ctx, []string{"HostSystem"}, []string{"summary"}, &hss)
+	err = v.Retrieve(ctx, []string{"HostSystem"}, nil, &hss)
 
 	if err != nil {
-		msg := fmt.Sprintf("unable to retrieve HostSystem summary: error %s", err)
+		msg := fmt.Sprintf("unable to retrieve HostSystem: error %s", err)
 		log.Info(msg)
 		return ctrl.Result{
 			RequeueAfter: time.Duration(1) * time.Minute}, err
@@ -109,6 +110,27 @@ func (r *HostInfoReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 			hi.Status.FreeCPU = (int64(hs.Summary.Hardware.CpuMhz) * int64(hs.Summary.Hardware.NumCpuCores)) - int64(hs.Summary.QuickStats.OverallCpuUsage)
 			hi.Status.TotalMemory = ByteCountIEC(hs.Summary.Hardware.MemorySize)
 			hi.Status.FreeMemory = ByteCountIEC(int64(hs.Summary.Hardware.MemorySize) - (int64(hs.Summary.QuickStats.OverallMemoryUsage) * 1024 * 1024))
+			hi.Status.InMaintenanceMode = hs.Runtime.InMaintenanceMode
+
+			// get the storage info through datastore
+			var dss []mo.Datastore
+			pc := property.DefaultCollector(r.VC)
+			err = pc.Retrieve(ctx, hs.Datastore, []string{"summary"}, &dss)
+			if err != nil {
+				msg := fmt.Sprintf("unable to retrieve Datastore summary: error %s", err)
+				log.Info(msg)
+				return ctrl.Result{}, nil
+			}
+			var totalstorage int64
+			var freestorage int64
+			for _, ds := range dss {
+				totalstorage += ds.Summary.Capacity
+				freestorage += ds.Summary.FreeSpace
+			}
+
+			hi.Status.TotalStorage = ByteCountIEC(totalstorage)
+			hi.Status.FreeStorage = ByteCountIEC(freestorage)
+
 		}
 	}
 

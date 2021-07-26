@@ -35,7 +35,7 @@ type DatastoreInfoStatus struct {
 	Capacity     string   `json:"capacity,omitempty"`
 	FreeSpace    string   `json:"free_space,omitempty"`
 	Accessible   bool     `json:"accessible,omitempty"`
-	HostsMounted []string `json:"hosts,omitempty"`
+	HostsMounted []string `json:"hosts_mounted,omitempty"`
 }
 
 // +kubebuilder:validation:Optional
@@ -43,7 +43,8 @@ type DatastoreInfoStatus struct {
 // +kubebuilder:printcolumn:name="Datastore",type=string,JSONPath=`.spec.datastore`
 // +kubebuilder:printcolumn:name="Type",type=string,JSONPath=`.status.type`
 // +kubebuilder:printcolumn:name="Capacity",type=string,JSONPath=`.status.capacity`
-// +kubebuilder:printcolumn:name="FreeSpace ",type=string,JSONPath=`.status.free_space`
+// +kubebuilder:printcolumn:name="FreeSpace",type=string,JSONPath=`.status.free_space`
+// +kubebuilder:printcolumn:name="HostsMounted",type=string,JSONPath=`.status.hosts_mounted`
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 

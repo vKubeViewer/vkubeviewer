@@ -34,6 +34,9 @@ spec:
     - jsonPath: .status.free_memory
       name: FreeMemory
       type: string
+    - jsonPath: .status.in_maintenance_mode
+      name: InMaintenanceMode
+      type: string
     name: v1
     schema:
       openAPIV3Schema:
@@ -65,10 +68,16 @@ spec:
                 type: integer
               free_memory:
                 type: string
+              free_storage:
+                type: string
+              in_maintenance_mode:
+                type: boolean
               total_cpu:
                 format: int64
                 type: integer
               total_memory:
+                type: string
+              total_storage:
                 type: string
             type: object
         type: object

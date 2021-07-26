@@ -29,7 +29,10 @@ spec:
       name: Capacity
       type: string
     - jsonPath: .status.free_space
-      name: 'FreeSpace '
+      name: FreeSpace
+      type: string
+    - jsonPath: .status.hosts_mounted
+      name: HostsMounted
       type: string
     name: v1
     schema:
@@ -63,7 +66,7 @@ spec:
                 type: string
               free_space:
                 type: string
-              hosts:
+              hosts_mounted:
                 items:
                   type: string
                 type: array

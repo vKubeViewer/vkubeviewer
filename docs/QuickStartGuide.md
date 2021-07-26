@@ -10,7 +10,6 @@
 - [Kubebuilder](https://go.kubebuilder.io/quick-start.html)
 - [Kustomize](https://kubernetes-sigs.github.io/kustomize/installation/)
 - Access to a Container Image Repository (docker.io, quay.io, harbor)
-- Make binary  → `sudo apt install make`
 
 
 **Step 2 :** Get the **vKubeViewer** operator to your desktop
@@ -27,26 +26,14 @@ chmod +x ./go-pack.sh
 ./go-pack.sh
 ```
 
-
-You can check the currently installed CRDs on your K8s cluster by :
-
-```
-kubectl get crd
-```
-
 **Step 4:**  Install the CRDs from this operator.
 
 ```
 make install
 ```
 
-**Step 5:**  Check your newly installed CRDs.
 
-```
-kubectl get crd
-```
-
-**Step 6:** **Edit** the CR sample yaml in *config/samples* folder, choose the one you want to view. For instance to view VM information, edit the spec field and put your VM name in **nodename**  field in ***config/samples/topology_v1_nodeinfo.yaml*** as shown below:
+**Step 5:** **Edit** the CR sample yaml in *config/samples* folder, choose the one you want to view. For instance to view VM information, edit the spec field and put your VM name in **nodename**  field in ***config/samples/topology_v1_nodeinfo.yaml*** as shown below:
 
 ```
 cd config/samples
@@ -63,22 +50,14 @@ spec:
 nodename: k8s-worker-01
 ```
 
-**Step 7:** **Apply** the above YAML to create your custom resource
+**Step 6:** **Apply** the above YAML to create your custom resource
 
 ```
 kubectl apply -f topology_v1_nodeinfo.yaml
 ```
 
-**Step 8:** **Query** the CR we just created, check if the **nodename** field is also printed.
 
-```
-kubectl get nodeinfo
-
-NAME           NODENAME
-k8s-worker-1   k8s-worker-01
-```
-
-**Step 9:**To build the manager code locally, you can run the following make command: 
+**Step 7:**To build the manager code locally, you can run the following make command: 
 
 **Note:** Skip to step 11 if you want to build the manager on a pod using a publicly accessible image.
 
@@ -95,7 +74,7 @@ export GOVMOMI_USERNAME=Your_Username@vsphere.local
 export GOVMOMI_PASSWORD=Your_VC_Password
 ```
 
-**Step 10:** The manager can now be started in standalone mode, run:
+**Step 8:** The manager can now be started in standalone mode, run:
 
 ```
 bin/manager
@@ -122,13 +101,18 @@ The output should look like:
 
 You can apply more CRDs from the samples folder for other resources. 
 
-**Step 11** : We can run the below command to see the required fields in the status field of the CRD.
+**Step 9** : We can run the below command to see the required fields in the status field of the CRD.
+
+```
+kubectl get nodeinfo
+```
+for detailed information run:
 
 ```
 kubectl get nodeinfo -o yaml
 ```
 
-Output:
+Yaml Output:
 
 ```
 apiVersion: [topology.vkubeviewer.com/v1](http://topology.vkubeviewer.com/v1)
@@ -163,7 +147,7 @@ selfLink: ""
 
 ## Running the controller-manager on a pod in your K8s cluster
 
-**Step 12:** Login into [Docker.io](http://docker.io) as you will need to get the controller image stored in vkubeviewer repository.
+**Step 10:** Login into [Docker.io](http://docker.io) as you will need to get the controller image stored in vkubeviewer repository.
 
 ```
 docker login —username dockerID —password 'My_password'
@@ -175,7 +159,7 @@ Set the environment variable IMG to point at the required image.
 export IMG=docker.io/vkubeviewer/controller-manager:latest
 ```
 
-**Step 13:** Create the **namespace** and **secret** used by the controller pod.
+**Step 11:** Create the **namespace** and **secret** used by the controller pod.
 
 ```
 kubectl create ns vkubeviewer-system
@@ -189,16 +173,16 @@ kubectl create secret generic vc-creds-1 \
 --from-literal='GOVMOMI_PASSWORD=**Password**' \
 --from-literal='GOVMOMI_URL=192.168.0.100' \
 -n vkubeviewer-system
-[output]secret/vc-creds-1 created
+
 ```
 
-**Step14:** Create the deployment with 1 replica set which ensures that the controller pod keeps running. run:
+**Step 12:** Create the deployment with 1 replica set which ensures that the controller pod keeps running. run:
 
 ```
 make deploy
 ```
 
-**Step 15:** Check the pod is running fine with both the containers in ready and running state.
+**Step 13:** Check the pod is running fine with both the containers in ready and running state.
 
 ```
 kubectl get pods -n vkubeviewer-system
@@ -207,50 +191,37 @@ NAME                                          READY   STATUS    RESTARTS   AGE
 vkubeviewer-controller-manager-566c6fffdb-fxjr2   2/2     Running   0          2m39s
 ```
 
-**Step 16:** Re-apply the sample YAMLs for the custom resources to be monitored by the above pod. 
+**Step 14:** Re-apply the sample YAMLs for the custom resources to be monitored by the above pod. 
 
 ```
 kustomize build config/samples | kubectl create -f -
 ```
 
-**Step 17:** Finally, we can run the below command to see the required fields in the status field of the CRDs.
+**Step 15:** Finally, we can run the below command to see the required fields in the status field of the CRDs.
 
 ```
-kubectl get hostinfo -o yaml
-kubectl get nodeinfo -o yaml
-kubectl get fcdinfo -o yaml
+kubectl get hostinfo 
+kubectl get nodeinfo 
+kubectl get fcdinfo
+kubectl get datastoreinfo
+kubectl get taginfo
 ```
 
-Output of fcdinfo :
+Output of datastoreinfo :
 
 ```
-apiVersion: v1
-items:
-- apiVersion: topology.vkubeviewer.com/v1
-  kind: FCDInfo
-  metadata:
-    annotations:
-      kubectl.kubernetes.io/last-applied-configuration: |
-        {"apiVersion":"topology.vkubeviewer.com/v1","kind":"FCDInfo","metadata":{"annotations":{},"name":"fcdinfo-sample","namespace":"default"},"spec":{"pvId":"pvc-b8458bef-178e-40dd-9bc0-2a05f1ddfd65"}}
-    creationTimestamp: "2021-07-01T16:02:22Z"
-    generation: 1
-    name: fcdinfo-sample
-    namespace: default
-    resourceVersion: "16637703"
-    uid: 03439716-ccc4-41ae-9559-fd19c96ef362
-  spec:
-    pvId: pvc-b8458bef-178e-40dd-9bc0-2a05f1ddfd65
-  **status:
-    filePath: '[vsan-OCTO-Cluster-B] b2d46d60-cd6e-6724-576b-246e962f4ab4/12a23b18541b4a28965cf4af1e963578.vmdk'
-    provisioningType: thin
-    sizeMB: 5120**
-kind: List
-metadata:
-  resourceVersion: ""
-  selfLink: ""
+NAME                  NODENAME              VMTOTALCPU   VMTOTALMEM   VMPOWERSTATE   VMIPADDRESS   VMHWVERSION   CLUSTER          HOST
+k8s-controlplane-01   k8s-controlplane-01   4            4096         poweredOn      10.27.51.17   vmx-10        OCTO-Cluster-A   esxi-dell-f.rainpole.com
+k8s-worker-01         k8s-worker-01         4            4096         poweredOn      10.27.51.54                 OCTO-Cluster-A   esxi-dell-f.rainpole.com
+k8s-worker-02         k8s-worker-02         4            4096         poweredOn      10.27.51.25                 OCTO-Cluster-B   esxi-dell-k.rainpole.com
+k8s-worker-03         k8s-worker-03         4            4096         poweredOn      10.27.51.28   vmx-18        OCTO-Cluster-C   esxi-dell-i.rainpole.com
+k8s-worker-04         k8s-worker-04         4            4096         poweredOn      10.27.51.31   vmx-10        OCTO-Cluster-A   esxi-dell-f.rainpole.com
+k8s-worker-05         k8s-worker-05         4            4096         poweredOn      10.27.51.32   vmx-10        OCTO-Cluster-B   esxi-dell-j.rainpole.com
+k8s-worker-06         k8s-worker-06         4            4096         poweredOn      10.27.51.18   vmx-19        OCTO-Cluster-C   esxi-dell-i.rainpole.com
+
 ```
 
-### Step 18: Clean Up.
+### Step 16: Clean Up.
 
 Remove the CRDs
 
