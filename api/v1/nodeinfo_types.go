@@ -42,18 +42,17 @@ type NodeInfoStatus struct {
 	VMIpAddress  string   `json:"vm_ip_address,omitempty"`
 	PathToVM     string   `json:"path_to_vm,omitempty"`
 
-	NetName          string `json:"net_name,omitempty"`
-	NetOverallStatus string `json:"net_overall_status,omitempty"`
-	NetSwitchType    string `json:"net_switch_type,omitempty"`
-	NetVlanId        int32  `json:"net_vlan_id,omitempty"`
-	RelatedCluster   string `json:"related_cluster,omitempty"`
-	RelatedHost      string `json:"related_host,omitempty"`
+	NetName          string   `json:"net_name,omitempty"`
+	NetOverallStatus string   `json:"net_overall_status,omitempty"`
+	NetSwitchType    string   `json:"net_switch_type,omitempty"`
+	NetVlanId        int32    `json:"net_vlan_id,omitempty"`
+	RelatedCluster   string   `json:"related_cluster,omitempty"`
+	RelatedHost      string   `json:"related_host,omitempty"`
 	RelatedDatastore []string `json:"related_datastore,omitempty"`
 }
 
 // +kubebuilder:validation:Optional
 // +kubebuilder:resource:shortName={"nd"}
-// +kubebuilder:printcolumn:name="Nodename",type=string,JSONPath=`.spec.nodename`
 // +kubebuilder:printcolumn:name="VMTotalCPU",type=string,JSONPath=`.status.vm_total_cpu`
 // +kubebuilder:printcolumn:name="VMTotalMem",type=string,JSONPath=`.status.vm_total_mem`
 // +kubebuilder:printcolumn:name="VMPowerState",type=string,JSONPath=`.status.vm_power_state`

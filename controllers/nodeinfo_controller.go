@@ -248,7 +248,7 @@ func (r *NodeInfoReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 		return ctrl.Result{}, err
 	}
 
-	return ctrl.Result{RequeueAfter: time.Duration(1) * time.Minute}, nil
+	return ctrl.Result{RequeueAfter: time.Duration(30) * time.Second}, nil
 }
 
 // SetupWithManager sets up the controller with the Manager.
