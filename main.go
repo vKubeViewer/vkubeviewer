@@ -119,7 +119,6 @@ func createFCDInfo(ctx context.Context, mgr manager.Manager, vim25client *vim25.
 	var k8spv = controllers.ListK8sPV()
 	var err error
 	c := mgr.GetClient()
-	fmt.Println(k8spv)
 	for index, fcd := range k8spv {
 		fcdindo := &topologyv1.FCDInfo{
 			TypeMeta:   metav1.TypeMeta{Kind: "FCDInfo", APIVersion: "topology.vkubeviewer.com/v1"},

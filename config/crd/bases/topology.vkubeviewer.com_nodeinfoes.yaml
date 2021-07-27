@@ -19,9 +19,6 @@ spec:
   scope: Namespaced
   versions:
   - additionalPrinterColumns:
-    - jsonPath: .spec.nodename
-      name: Nodename
-      type: string
     - jsonPath: .status.vm_total_cpu
       name: VMTotalCPU
       type: string
@@ -42,6 +39,9 @@ spec:
       type: string
     - jsonPath: .status.related_host
       name: Host
+      type: string
+    - jsonPath: .status.related_datastore
+      name: Datastore
       type: string
     name: v1
     schema:
@@ -87,6 +87,10 @@ spec:
                 type: string
               related_cluster:
                 type: string
+              related_datastore:
+                items:
+                  type: string
+                type: array
               related_host:
                 type: string
               vm_guest_id:

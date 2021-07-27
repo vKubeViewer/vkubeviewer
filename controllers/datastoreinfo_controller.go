@@ -156,7 +156,7 @@ func (r *DatastoreInfoReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 	}
 
 	return ctrl.Result{
-		RequeueAfter: time.Duration(1) * time.Minute,
+		RequeueAfter: time.Duration(30) * time.Second,
 	}, nil
 }
 

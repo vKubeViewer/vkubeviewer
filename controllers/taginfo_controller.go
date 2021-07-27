@@ -226,7 +226,7 @@ func (r *TagInfoReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 	}
 
 	return ctrl.Result{
-		RequeueAfter: time.Duration(1) * time.Minute,
+		RequeueAfter: time.Duration(30) * time.Second,
 	}, nil
 }
 

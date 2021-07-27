@@ -126,7 +126,7 @@ func (r *FCDInfoReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		return ctrl.Result{}, err
 	}
 
-	return ctrl.Result{RequeueAfter: time.Duration(1) * time.Minute}, nil
+	return ctrl.Result{RequeueAfter: time.Duration(30) * time.Second}, nil
 }
 
 // SetupWithManager sets up the controller with the Manager.
