@@ -87,16 +87,14 @@ func (r *FCDInfoReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 	// retrieve vstorageID
 	m := vslm.NewGlobalObjectManager(vslmClient)
 	var query []vslmtypes.VslmVsoVStorageObjectQuerySpec
-	var k8spv = ListK8sPV()
 
-	for _, pv := range k8spv {
-		spec := vslmtypes.VslmVsoVStorageObjectQuerySpec{
-			QueryField:    "name",
-			QueryOperator: "contains",
-			QueryValue:    []string{pv},
-		}
-		query = append(query, spec)
+	spec := vslmtypes.VslmVsoVStorageObjectQuerySpec{
+		QueryField:    "name",
+		QueryOperator: "equals",
+		QueryValue:    []string{fcd.Spec.PVId},
 	}
+	query = append(query, spec)
+
 	result, _ := m.ListObjectsForSpec(ctx, query, 1000)
 	vstorageIDs := result.Id
 
