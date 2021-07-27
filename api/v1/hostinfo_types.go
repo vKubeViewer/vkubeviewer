@@ -46,6 +46,8 @@ type HostInfoStatus struct {
 // +kubebuilder:printcolumn:name="FreeCPU",type=string,JSONPath=`.status.free_cpu`
 // +kubebuilder:printcolumn:name="TotalMemory",type=string,JSONPath=`.status.total_memory`
 // +kubebuilder:printcolumn:name="FreeMemory",type=string,JSONPath=`.status.free_memory`
+// +kubebuilder:printcolumn:name="TotalStorage",type=string,JSONPath=`.status.total_storage`
+// +kubebuilder:printcolumn:name="FReeStorage",type=string,JSONPath=`.status.free_storage`
 // +kubebuilder:printcolumn:name="InMaintenanceMode",type=string,JSONPath=`.status.in_maintenance_mode`
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status

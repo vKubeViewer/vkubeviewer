@@ -34,6 +34,12 @@ spec:
     - jsonPath: .status.free_memory
       name: FreeMemory
       type: string
+    - jsonPath: .status.total_storage
+      name: TotalStorage
+      type: string
+    - jsonPath: .status.free_storage
+      name: FReeStorage
+      type: string
     - jsonPath: .status.in_maintenance_mode
       name: InMaintenanceMode
       type: string
