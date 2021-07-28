@@ -31,7 +31,7 @@ type NodeInfoSpec struct {
 // NodeInfoStatus defines the observed state of NodeInfo
 type NodeInfoStatus struct {
 	// cpu, memory, vmipaddress, powerstate
-	ActtachedTag []string `json:"acttached_tag,omitempty"`
+	AttachedTag  []string `json:"attached_tag,omitempty"`
 	VMGuestId    string   `json:"vm_guest_id,omitempty"`
 	VMTotalCPU   int64    `json:"vm_total_cpu,omitempty"`
 	VMResvdCPU   int64    `json:"vm_resvd_cpu,omitempty"`

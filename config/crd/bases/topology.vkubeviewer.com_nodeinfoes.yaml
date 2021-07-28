@@ -69,7 +69,7 @@ spec:
           status:
             description: NodeInfoStatus defines the observed state of NodeInfo
             properties:
-              acttached_tag:
+              attached_tag:
                 description: cpu, memory, vmipaddress, powerstate
                 items:
                   type: string
