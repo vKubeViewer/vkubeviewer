@@ -16,7 +16,7 @@ This document contains information on the [Host Information](https://github.com/
 
 ## API to Retrieve Infomation
 
-These fields are populated Via API calls to the vShere server via [Host Information API](https://github.com/vKubeViewer/vkubeviewer/blob/Richard/api/v1/hostinfo_types.go) as follows
+These fields are populated Via API calls to the vShere server via [Host Information API](https://github.com/vKubeViewer/vkubeviewer/blob/main/api/v1/hostinfo_types.go) as follows
 
 ### Set Target Host Name
 
