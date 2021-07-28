@@ -1,4 +1,4 @@
-# vKubeViewer In-Depth Guide
+# Developer Guide
  
 This document contains a Kubernetes Operator that uses VMware's **Govmomi** to return some simple ESXi host information through the status fields of a **Custom Resource (CR)**, which are called [HostInfo](https://github.com/vKubeViewer/vkubeviewer/blob/main/docs/Node%20Information.md), [NodeInfo](https://github.com/vKubeViewer/vkubeviewer/blob/main/docs/Node%20Information.md), [FCDInfo](https://github.com/vKubeViewer/vkubeviewer/blob/main/docs/First%20Class%20Disk%20Information.md) etc... This will require us to extend Kubernetes with a new **Custom Resource Definition (CRD)**. The code shown is one way in which a Kubernetes controller/operator can access the underlying vSphere infrastructure for the purposes of querying resources.
 
