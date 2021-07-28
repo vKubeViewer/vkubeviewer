@@ -23,20 +23,20 @@ The key problem for this project is that Kubernetes has no visibility on the und
 
 [Quick-Start Guide](https://github.com/vKubeViewer/vkubeviewer/blob/main/docs/QuickStartGuide.md) 
 
-[In-Depth Guide](https://github.com/vKubeViewer/vkubeviewer/blob/Richard/docs/vKubeViewer%20Guide.md) 
+[Developer Guide](https://github.com/vKubeViewer/vkubeviewer/blob/main/docs/vKubeViewer%20Guide.md) 
 
 
 ## Current Feature Set
 
-[Host Information](https://github.com/vKubeViewer/vkubeviewer/blob/Richard/docs/Host%20Information.md)
+[Host Information](https://github.com/vKubeViewer/vkubeviewer/blob/main/docs/Host%20Information.md)
 
-[Node Information](https://github.com/vKubeViewer/vkubeviewer/blob/Richard/docs/Node%20Information.md)
+[Node Information](https://github.com/vKubeViewer/vkubeviewer/blob/main/docs/Node%20Information.md)
 
-[First Class Disk Information](https://github.com/vKubeViewer/vkubeviewer/blob/Richard/docs/First%20Class%20Disk%20Information.md)
+[First Class Disk Information](https://github.com/vKubeViewer/vkubeviewer/blob/main/docs/First%20Class%20Disk%20Information.md)
 
-[Tag Information](https://github.com/vKubeViewer/vkubeviewer/blob/Richard/docs/Tag%20Information.md)
+[Tag Information](https://github.com/vKubeViewer/vkubeviewer/blob/main/docs/Tag%20Information.md)
 
-[Data Store Information](https://github.com/vKubeViewer/vkubeviewer/blob/Richard/docs/Data%20Store%20Information.md)
+[Data Store Information](https://github.com/vKubeViewer/vkubeviewer/blob/main/docs/Data%20Store%20Information.md)
 
 
 ## Project Contributors
