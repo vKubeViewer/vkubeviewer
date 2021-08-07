@@ -14,10 +14,27 @@ Alpha: 1.0
 
 The key problem for this project is that Kubernetes has no visibility on the underlying server resource usage information from vSphere. Examples of resource information includes RAM usage, storage usage, and network data usage. This lack of visibility results in users leaving the Kubernetes environment and entering the vSphere environment when attempting to locate this resource usage information. This presents a large time loss for users and organizations. As Kubernetes is designed to manage large amounts of containers, if a user needs to log into vSphere each time they require access to this server recourse usage information, the time loss and subsequent costs can quickly add up for organizations. These costs are most felt by organizations with many Kubernetes users.  
 
-## Expected Project outcomes
+## Usage Example
+```
+$ kubectl get hostinfo
 
-- Developed knowledge in GO and govmomi for calling vSphere API
-- Create a set of sample govmomi scripts which can be used to retrieve vSphere information
+NAME                             HOSTNAME                         TOTALCPU   FREECPU   TOTALMEMORY   FREEMEMORY   INMAINTENANCEMODE
+esxi-dell-e.rainpole.com         esxi-dell-e.rainpole.com         43980      40144     127.91 GiB    59.25 GiB    false
+esxi-dell-f.rainpole.com         esxi-dell-f.rainpole.com         43980      42142     127.91 GiB    82.69 GiB    false
+esxi-dell-g.rainpole.com         esxi-dell-g.rainpole.com         43980      42419     127.91 GiB    75.74 GiB    false
+esxi-dell-h.rainpole.com         esxi-dell-h.rainpole.com         43980      43693     127.91 GiB    110.11 GiB   false
+```
+
+
+```
+$ kubectl get nodeinfo 
+
+NAME                  NODENAME              VMTOTALCPU   VMTOTALMEM   VMPOWERSTATE   VMIPADDRESS   VMHWVERSION   CLUSTER          HOST
+k8s-controlplane-01   k8s-controlplane-01   4            4096         poweredOn      10.27.51.17   vmx-10        OCTO-Cluster-A   esxi-dell-f.rainpole.com
+k8s-worker-01         k8s-worker-01         4            4096         poweredOn      10.27.51.54   vmx-10        OCTO-Cluster-A   esxi-dell-f.rainpole.com
+k8s-worker-02         k8s-worker-02         4            4096         poweredOn      10.27.51.25   vmx-10        OCTO-Cluster-B   esxi-dell-k.rainpole.com
+k8s-worker-03         k8s-worker-03         4            4096         poweredOn      10.27.51.28   vmx-18        OCTO-Cluster-C   esxi-dell-i.rainpole.com
+```
 
 ## Guides
 
