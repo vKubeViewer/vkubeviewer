@@ -4,10 +4,10 @@
 
 The vKubeViewer project is a collaborative project between VMware and students of University College Cork (Ireland) with the aim of creating a Kubernetes operator that will facilitate the retrival of vSphere resource usage infomation from within Kubernetes.
 
-Upon initial 1.0 release, the project will be open sourced and the Kubernetes community is free to use and update the project with additional features and functionality. 
+Upon initial 1.0 release, the project will be open sourced and the Kubernetes community is free to use and update the project with additional features and functionality.
 
+### Current Version
 
-### Current Version 
 Alpha: 1.0
 
 ## Problem Statement
@@ -24,7 +24,7 @@ Below are some sample outputs taken from the vKubeViewer Operator.
 
 The `hostinfo` CRD reports on ESXi hosts / hypervisors.
 
-```
+```shell
 % kubectl get hostinfo
 NAME                             HOSTNAME                         TOTALCPU   FREECPU   TOTALMEMORY   FREEMEMORY   TOTALSTORAGE   FREESTORAGE   INMAINTENANCEMODE
 esxi-dell-e.rainpole.com         esxi-dell-e.rainpole.com         43980      42715     127.91 GiB    74.53 GiB    54.82 TiB      48.23 TiB     false
@@ -39,7 +39,7 @@ esxi-dell-l.rainpole.com         esxi-dell-l.rainpole.com         44000      438
 
 The `nodeinfo` CRD provides information related to the Kubernetes nodes as virtual machines.
 
-```
+```shell
 % kubectl get nodeinfo
 NAME                  VMTOTALCPU   VMTOTALMEM   VMPOWERSTATE   VMIPADDRESS   VMHWVERSION   CLUSTER          HOST                       DATASTORE
 k8s-controlplane-01   4            4096         poweredOn      10.27.51.17   vmx-10        OCTO-Cluster-A   esxi-dell-f.rainpole.com   ["vsan-OCTO-Cluster-A"]
@@ -52,7 +52,8 @@ k8s-worker-06         4            4096         poweredOn      10.27.51.18   vmx
 ```
 
 The `datastoreinfo` CRD informs us which hosts in the vSphere environment mount particular datastores, along with type and usage information.
-```
+
+```shell
 % kubectl get datastoreinfo
 NAME                  DATASTORE             TYPE   CAPACITY     FREESPACE    HOSTSMOUNTED
 isilon-01             isilon-01             NFS    50.46 TiB    45.35 TiB    ["esxi-dell-h.rainpole.com","esxi-dell-i.rainpole.com","esxi-dell-l.rainpole.com","esxi-dell-e.rainpole.com","esxi-dell-f.rainpole.com","esxi-dell-k.rainpole.com","esxi-dell-g.rainpole.com","esxi-dell-j.rainpole.com"]
@@ -63,7 +64,7 @@ vsan-octo-cluster-c   vsan-OCTO-Cluster-C   vsan   745.20 GiB   644.56 GiB   ["e
 
 More information can be returned via the CR status fields, and all fields shown here can be modified to display bespoke information that is of interest to the Kubernetes platform admin. Essentially, any information needed by the K8s platform admin can be added to the CRD and displayed in the main view, or in the status fields. The status field information can be displayed using the -o yaml option. Below, we can see some additional vSphere networking information and tags are associated with the node.
 
-```
+```yaml
 % kubectl get nodeinfo k8s-worker-01 -o yaml
 apiVersion: topology.vkubeviewer.com/v1
 kind: NodeInfo
@@ -125,7 +126,7 @@ Additional CRDs have been created to display vSphere Tags, which are used for mu
 
 The `FCDInfo` CRD reports back vSphere storage infromation for a Persistent Volume:
 
-```
+```shell
 % kubectl get fcdinfo
 NAME   PVID                                       SIZEMB   FILEPATH                                                                                           PROVISIONINGTYPE
 fcd0   pvc-1afe9426-88e3-4628-9325-fba1a5b4adfe   4096     [vsan-OCTO-Cluster-C] 13528960-0340-9454-9109-246e962f4ab4/90ada30651be4b42820ed60141413cf2.vmdk   thin
@@ -134,10 +135,9 @@ fcd1   pvc-fd644107-77fa-4f86-bf5f-5289618f9295   4096     [vsan-OCTO-Cluster-C]
 
 ## Guides
 
-[Quick-Start Guide](https://github.com/vKubeViewer/vkubeviewer/blob/main/docs/QuickStartGuide.md) 
+[Quick-Start Guide](https://github.com/vKubeViewer/vkubeviewer/blob/main/docs/QuickStartGuide.md)
 
-[Developer Guide](https://github.com/vKubeViewer/vkubeviewer/blob/main/docs/vKubeViewer%20Guide.md) 
-
+[Developer Guide](https://github.com/vKubeViewer/vkubeviewer/blob/main/docs/vKubeViewer%20Guide.md)
 
 ## Current Feature Set
 
@@ -150,7 +150,6 @@ fcd1   pvc-fd644107-77fa-4f86-bf5f-5289618f9295   4096     [vsan-OCTO-Cluster-C]
 [Tag Information](https://github.com/vKubeViewer/vkubeviewer/blob/main/docs/Tag%20Information.md)
 
 [Data Store Information](https://github.com/vKubeViewer/vkubeviewer/blob/main/docs/Data%20Store%20Information.md)
-
 
 ## Project Contributors
 
